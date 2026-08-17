@@ -16,6 +16,11 @@ Created, maintained and © by Dr. Peter Hruschka, Dr. Gernot Starke and
 contributors. See <https://arc42.org>.
 
 # Introduction and Goals {#section-introduction-and-goals}
+Actualmente, los estudiantes universitarios utilizan diferentes medios para compartir y conseguir material académico, como apuntes, talleres, ejercicios, parciales y documentos de estudio. Sin embargo, este material suele encontrarse disperso en grupos de WhatsApp, redes sociales, servicios de almacenamiento o conversaciones entre compañeros, lo que dificulta encontrar información específica cuando se necesita.
+
+A partir de esta problemática surge ShareU, una plataforma web orientada a estudiantes universitarios que busca centralizar y organizar el material académico en un solo lugar. La plataforma permitirá a los usuarios compartir documentos, buscar material de diferentes materias, descargar recursos y calificarlos según su utilidad. Además, los documentos podrán organizarse por universidad, carrera y materia, facilitando su localización.
+
+El propósito principal de ShareU es simplificar el acceso y el intercambio de recursos académicos, reduciendo el tiempo que los estudiantes deben dedicar a buscar material en diferentes plataformas. Para esto, se plantea una interfaz sencilla y herramientas de búsqueda y filtrado que permitan encontrar documentos de manera rápida y organizada.
 
 ## Requirements Overview {#_requirements_overview}
 
