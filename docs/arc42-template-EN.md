@@ -241,15 +241,15 @@ Mapping of Building Blocks to Infrastructure
 *\<explanation\>*
 
 # Architecture Decisions {#section-design-decisions}
-
+.
 # Quality Requirements {#section-quality-scenarios}
-
+.
 ## Quality Requirements Overview {#_quality_requirements_overview}
-
+.
 ## Quality Scenarios {#_quality_scenarios}
-
+.
 # Risks and Technical Debts {#section-technical-risks}
-
+.
 # Glossary {#section-glossary}
 
 +----------------------+-----------------------------------------------+
