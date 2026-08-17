@@ -45,6 +45,28 @@ El requisito de calidad más importante para ShareU es la **usabilidad**, debido
 
 ## Quality Goals {#_quality_goals}
 
+Los objetivos de calidad de ShareU están orientados a garantizar que la plataforma sea fácil de utilizar, segura, rápida y confiable para los estudiantes. Estos objetivos permiten establecer criterios que servirán para evaluar si el sistema cumple con las características esperadas durante su desarrollo.
+
+Los principales objetivos de calidad son:
+
+| **Objetivo de calidad** | **Descripción**                                                                                                                                            | **Prioridad** |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| **Usabilidad**          | La plataforma debe ser sencilla e intuitiva, permitiendo que los estudiantes encuentren, suban y descarguen material académico sin dificultad.             | **Muy alta**  |
+| **Seguridad**           | La información de los usuarios y sus documentos debe estar protegida, evitando accesos no autorizados y controlando los permisos según el tipo de usuario. | **Alta**      |
+| **Rendimiento**         | Las búsquedas, consultas y acciones principales deben ejecutarse rápidamente para evitar esperas innecesarias.                                             | **Alta**      |
+| **Disponibilidad**      | La plataforma debe estar disponible para que los estudiantes puedan consultar y compartir material cuando lo necesiten.                                    | **Alta**      |
+| **Mantenibilidad**      | El sistema debe estar organizado de manera que sea posible corregir errores, realizar cambios y agregar nuevas funcionalidades sin afectar las existentes. | **Media**     |
+| **Escalabilidad**       | La plataforma debe poder soportar un aumento progresivo de usuarios y documentos sin afectar significativamente su funcionamiento.                         | **Media**     |
+
+### Priorización
+
+La **usabilidad** es el principal objetivo de calidad de ShareU, ya que la plataforma busca facilitar el acceso al material académico y reducir el tiempo que los estudiantes dedican a encontrarlo. Una interfaz complicada o un proceso de búsqueda poco claro disminuiría considerablemente la utilidad del sistema.
+
+La **seguridad** también tiene una prioridad muy alta debido a que ShareU manejará cuentas de usuarios, documentos y diferentes niveles de permisos. Por otro lado, el **rendimiento y la disponibilidad** son importantes para garantizar una experiencia fluida durante la búsqueda y descarga de material.
+
+Finalmente, la **mantenibilidad y escalabilidad** permitirán que ShareU pueda evolucionar con el tiempo, incorporando nuevas funcionalidades y soportando un mayor número de usuarios y documentos.
+
+
 ## Stakeholders {#_stakeholders}
 
 +-------------+---------------------------+---------------------------+
