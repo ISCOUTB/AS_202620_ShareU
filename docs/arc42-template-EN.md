@@ -23,6 +23,26 @@ A partir de esta problemática surge ShareU, una plataforma web orientada a estu
 El propósito principal de ShareU es simplificar el acceso y el intercambio de recursos académicos, reduciendo el tiempo que los estudiantes deben dedicar a buscar material en diferentes plataformas. Para esto, se plantea una interfaz sencilla y herramientas de búsqueda y filtrado que permitan encontrar documentos de manera rápida y organizada.
 
 ## Requirements Overview {#_requirements_overview}
+## Requirements Overview {#_requirements_overview}
+
+ShareU es una plataforma web orientada a estudiantes universitarios que tiene como propósito facilitar el intercambio y acceso a material académico. El sistema debe permitir que los estudiantes compartan documentos y que otros usuarios puedan encontrarlos de manera sencilla, utilizando diferentes criterios de búsqueda y clasificación.
+
+Los principales requisitos de ShareU están relacionados con la gestión de usuarios, documentos y búsqueda de material académico. Los usuarios deberán poder registrarse e iniciar sesión, crear y administrar su perfil, subir documentos y clasificarlos según la universidad, carrera y materia. También podrán buscar documentos, consultar su información, descargarlos y calificarlos según su utilidad.
+
+Además, la plataforma contará con un mecanismo para reportar documentos que puedan contener información incorrecta, contenido inapropiado o que incumplan las reglas de la plataforma. Estos reportes serán gestionados por un administrador, quien tendrá permisos para revisar y administrar usuarios y documentos.
+
+Entre los requisitos principales del sistema se encuentran:
+
+* **Gestión de usuarios:** registro, inicio de sesión y administración del perfil.
+* **Gestión de documentos:** subida, clasificación, consulta y descarga de material académico.
+* **Búsqueda y filtrado:** búsqueda mediante palabras clave y filtros como universidad, carrera, materia y tipo de documento.
+* **Calificación:** los usuarios podrán valorar los documentos para ayudar a identificar el material más útil.
+* **Administración:** el administrador podrá gestionar usuarios, documentos y reportes.
+* **Usabilidad:** la plataforma deberá ofrecer una interfaz sencilla e intuitiva que permita encontrar y compartir material sin procesos innecesariamente complejos.
+* **Seguridad:** el sistema deberá proteger las cuentas de los usuarios y controlar el acceso a las funcionalidades según el tipo de usuario.
+
+El requisito de calidad más importante para ShareU es la **usabilidad**, debido a que la utilidad de la plataforma depende de que los estudiantes puedan encontrar el material que necesitan de forma rápida y sencilla. También se consideran importantes la seguridad, el rendimiento, la disponibilidad y la mantenibilidad del sistema.
+
 
 ## Quality Goals {#_quality_goals}
 
