@@ -23,7 +23,6 @@ A partir de esta problemática surge ShareU, una plataforma web orientada a estu
 El propósito principal de ShareU es simplificar el acceso y el intercambio de recursos académicos, reduciendo el tiempo que los estudiantes deben dedicar a buscar material en diferentes plataformas. Para esto, se plantea una interfaz sencilla y herramientas de búsqueda y filtrado que permitan encontrar documentos de manera rápida y organizada.
 
 ## Requirements Overview {#_requirements_overview}
-## Requirements Overview {#_requirements_overview}
 
 ShareU es una plataforma web orientada a estudiantes universitarios que tiene como propósito facilitar el intercambio y acceso a material académico. El sistema debe permitir que los estudiantes compartan documentos y que otros usuarios puedan encontrarlos de manera sencilla, utilizando diferentes criterios de búsqueda y clasificación.
 
