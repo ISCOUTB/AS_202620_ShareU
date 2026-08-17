@@ -1,8 +1,8 @@
-# Uso de Inteligencia Artificial — EncuentraUTB
+# Uso de Inteligencia Artificial
  
 ## Propósito de este documento
  
-Este archivo registra de manera transparente el uso de herramientas de inteligencia artificial (IA) durante el desarrollo del proyecto **EncuentraUTB**, indicando en qué tareas se usaron, con qué alcance y qué revisión humana se aplicó sobre lo generado.
+Este archivo registra de manera transparente el uso de herramientas de inteligencia artificial (IA) durante el desarrollo del proyecto **shareU**, indicando en qué tareas se usaron, con qué alcance y qué revisión humana se aplicó sobre lo generado.
  
 ## Herramientas de IA utilizadas
  
