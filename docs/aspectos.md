@@ -1,6 +1,6 @@
 # Idea del proyecto
 
-UniShare es una plataforma web pensada para estudiantes universitarios. La idea principal es tener un espacio donde se pueda compartir material académico como apuntes, ejercicios, talleres, parciales y otros documentos relacionados con las materias. De esta manera, un estudiante que necesite material para estudiar puede buscarlo y descargarlo desde la plataforma, mientras que quienes tengan documentos útiles pueden compartirlos con otros estudiantes.
+ShareU es una plataforma web pensada para estudiantes universitarios. La idea principal es tener un espacio donde se pueda compartir material académico como apuntes, ejercicios, talleres, parciales y otros documentos relacionados con las materias. De esta manera, un estudiante que necesite material para estudiar puede buscarlo y descargarlo desde la plataforma, mientras que quienes tengan documentos útiles pueden compartirlos con otros estudiantes.
 
 La plataforma permitiría buscar los documentos utilizando diferentes datos, como la universidad, la carrera, la materia, el tipo de documento, una palabra clave y la calificación. Esto haría que encontrar material académico específico sea mucho más sencillo.
 
@@ -12,7 +12,7 @@ La usabilidad es un aspecto crítico porque el valor principal de la plataforma 
 
 | Elemento                | Descripción                                                                                                                                                  |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Fuente del estímulo** | Un estudiante universitario que utiliza la plataforma UniShare                                                                                               |
+| **Fuente del estímulo** | Un estudiante universitario que utiliza la plataforma ShareU                                                                                               |
 | **Estímulo**            | El usuario ingresa a la plataforma buscando material académico específico de una materia                                                                     |
 | **Artefacto**           | Módulo de búsqueda y filtrado de documentos                                                                                                                  |
 | **Entorno**             | Uso normal, desde computador o celular, con o sin experiencia previa en la plataforma                                                                        |
