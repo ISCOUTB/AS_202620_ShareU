@@ -1,7 +1,5 @@
 # ADR 0001: Estilo arquitectónico de ShareU
 
-## Estado
-Aceptado
 
 ## Contexto
 ShareU es una plataforma web para compartir material académico entre estudiantes
