@@ -5,16 +5,6 @@ title: "![arc42](images/arc42-logo.png) Template"
 
 # 
 
-**About arc42**
-
-arc42, the template for documentation of software and system
-architecture.
-
-Template Version 9.0-EN. (based upon AsciiDoc version), July 2025
-
-Created, maintained and © by Dr. Peter Hruschka, Dr. Gernot Starke and
-contributors. See <https://arc42.org>.
-
 # Introduction and Goals {#section-introduction-and-goals}
 Actualmente, los estudiantes universitarios utilizan diferentes medios para compartir y conseguir material académico, como apuntes, talleres, ejercicios, parciales y documentos de estudio. Sin embargo, este material suele encontrarse disperso en grupos de WhatsApp, redes sociales, servicios de almacenamiento o conversaciones entre compañeros, lo que dificulta encontrar información específica cuando se necesita.
 
@@ -72,11 +62,10 @@ Finalmente, la **mantenibilidad y escalabilidad** permitirán que ShareU pueda e
 +-------------+---------------------------+---------------------------+
 | Role/Name   | Contact                   | Expectations              |
 +=============+===========================+===========================+
-| *           | *\<Contact-1\>*           | *\<Expectation-1\>*       |
-| \<Role-1\>* |                           |                           |
+|             | *\<Contact-1\>*           | *\<Expectation-1\>*       |
+|*\<Role-1\>* |                           |                           |
 +-------------+---------------------------+---------------------------+
-| *           | *\<Contact-2\>*           | *\<Expectation-2\>*       |
-| \<Role-2\>* |                           |                           |
+|*\<Role-2\>* | *\<Contact-2\>*           | *\<Expectation-2\>*       |
 +-------------+---------------------------+---------------------------+
 
 # Architecture Constraints {#section-architecture-constraints}
@@ -98,6 +87,58 @@ Finalmente, la **mantenibilidad y escalabilidad** permitirán que ShareU pueda e
 **\<Mapping Input/Output to Channels\>**
 
 # Solution Strategy {#section-solution-strategy}
+
+## Decisión de estilo arquitectónico
+
+Se evaluaron tres estilos sobre el mismo escenario prioritario de ShareU —
+usabilidad en la búsqueda y filtrado de documentos (`docs/aspectos.md`)— y
+sobre los objetivos de calidad definidos arriba.
+
+| | Capas | Hexagonal | Monolito modular |
+|---|---|---|---|
+| **Frontera** | Capa técnica (presentación / lógica / datos) | Puertos y adaptadores | Módulo de dominio |
+| **Atributo que favorece** | Simplicidad inicial | Testabilidad y sustitución de infraestructura | Evolución gradual por dominio |
+| **Costo que introduce** | Cambios transversales al crecer el dominio | Más indirección, curva de aprendizaje | Disciplina de límites entre módulos |
+| **Se rompe cuando** | El dominio crece más que la capa | El equipo no sostiene la abstracción | Nadie vigila el acoplamiento |
+| **Ajuste a ShareU** | Bajo: la búsqueda, la calificación y la moderación son dominios distintos que compartirían capa de servicio | Medio: buena testabilidad, pero el equipo no tiene experiencia previa ni tiempo para sostenerla esta fase | Alto: los dominios de ShareU (usuarios, documentos, búsqueda, calificaciones, administración) mapean directo a módulos |
+
+**Decisión:** monolito modular. Ver justificación completa, alternativas
+descartadas y consecuencias en `docs/adr/0001-estilo-arquitectonico.md`.
+
+## Estructura de módulos resultante
+
+- `usuarios` — registro, autenticación, perfil.
+- `documentos` — subida, clasificación (universidad/carrera/materia), descarga.
+- `busqueda` — filtrado y ranking de resultados (módulo crítico para el
+  escenario de usabilidad priorizado).
+- `calificaciones` — valoración de documentos.
+- `administracion` — reportes, moderación, gestión de usuarios y documentos.
+
+Cada módulo expone su propia interfaz interna; ningún módulo accede a los
+datos internos de otro directamente. Ver `app/` para el esqueleto ejecutable
+con esta estructura.
+
+## Tácticas por atributo de calidad
+
+Ver tabla de tácticas seleccionadas en `docs/adr/0001-estilo-arquitectonico.md`
+(sección "Tácticas seleccionadas para los atributos priorizados"): usabilidad
+(filtros visibles, resultados con info clave), seguridad (control de acceso
+por rol), rendimiento (índice y caché en búsqueda) y modificabilidad
+(SOLID/GRASP dentro de cada módulo).
+
+## Principios y patrones de nivel de código y módulo
+
+- **Nivel código:** SOLID y GRASP como criterio de asignación de
+  responsabilidades dentro de cada módulo, no como catecismo.
+- **Nivel módulo:** patrones de diseño (Factory, Strategy, Observer, etc.) se
+  aplican donde resuelvan un problema puntual de un módulo; no sustituyen la
+  decisión de estilo del ADR 0001.
+
+## Trazabilidad
+
+Esta estrategia de solución está motivada por el escenario de calidad de
+usabilidad declarado en `docs/aspectos.md` y queda registrada formalmente en
+`docs/adr/0001-estilo-arquitectonico.md`.
 
 # Building Block View {#section-building-block-view}
 
@@ -241,15 +282,23 @@ Mapping of Building Blocks to Infrastructure
 *\<explanation\>*
 
 # Architecture Decisions {#section-design-decisions}
-.
+
+Ver `docs/adr/`. Registrado hasta ahora:
+
+* [ADR 0001 — Estilo arquitectónico de ShareU](adr/0001-estilo-arquitectonico.md): monolito modular.
+
 # Quality Requirements {#section-quality-scenarios}
 .
 ## Quality Requirements Overview {#_quality_requirements_overview}
 .
 ## Quality Scenarios {#_quality_scenarios}
-.
+
+Ver el escenario de usabilidad detallado en `docs/aspectos.md`.
+
 # Risks and Technical Debts {#section-technical-risks}
-.
+
+* El monolito modular (ADR 0001) requiere disciplina de equipo para no acoplar módulos; sin revisión periódica, la frontera entre dominios puede erosionarse.
+
 # Glossary {#section-glossary}
 
 +----------------------+-----------------------------------------------+
