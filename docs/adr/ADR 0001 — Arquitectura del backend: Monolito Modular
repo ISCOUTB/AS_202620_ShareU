@@ -1,63 +1,43 @@
-# ADR 0001: Arquitectura del backend: Monolito Modular
-
-## Estado
-
-**Aceptada (Semana 3).**
+# ADR 0001: Estilo arquitectónico de ShareU
 
 ## Contexto
 
-ShareU necesita un backend que soporte cinco áreas de dominio: **usuarios, documentos, búsqueda, calificaciones y administración**. El sistema debe desarrollarse y entregarse de forma incremental, semana a semana, dentro de un curso de arquitectura de software.
+ShareU es una plataforma web para compartir material académico entre estudiantes universitarios, organizada por universidad, carrera y materia (ver `README.md` y `docs/arc42-template-EN.md`, sección Introduction and Goals).
 
-El equipo tiene experiencia limitada en patrones arquitectónicos avanzados, como **arquitectura hexagonal y microservicios**. Esta experiencia constituye una restricción activa sobre el nivel de complejidad que puede asumir la solución sin afectar la velocidad de entrega ni la calidad del proyecto.
+El aspecto de calidad declarado como crítico (`docs/aspectos.md`) es la **usabilidad**: un estudiante debe encontrar un documento relevante en menos de 3 interacciones (clics/filtros) usando el módulo de búsqueda y filtrado, sin ayuda externa. Le siguen en prioridad seguridad, rendimiento y disponibilidad (altas), y mantenibilidad y escalabilidad (medias).
+
+El sistema tiene dominios claramente separables: **usuarios, documentos, búsqueda/filtrado, calificaciones y administración** (reportes y moderación). El equipo es reducido (estudiantes), sin experiencia previa en despliegue distribuido, y el proyecto se entrega de forma incremental semana a semana.
 
 ## Decisión
 
-Se adopta un **monolito modular**: un único sistema desplegable desarrollado con **FastAPI**, organizado en cinco módulos de dominio:
-
-* `usuarios`
-* `documentos`
-* `busqueda`
-* `calificaciones`
-* `administracion`
-
-Cada módulo tendrá límites claros, su propio router y una interfaz interna definida. Los módulos no podrán acceder directamente al almacenamiento interno de los demás, con el fin de reducir el acoplamiento y mantener separadas las responsabilidades de cada dominio.
+Se adopta un **monolito modular**: un único desplegable organizado en módulos de dominio (usuarios, documentos, búsqueda, calificaciones, administración), con fronteras explícitas y comunicación controlada entre módulos. Cada módulo expone su propia interfaz interna y no accede directamente a los datos de otro.
 
 ## Alternativas consideradas
 
 ### Capas (N-tier) — descartada
 
-Organiza el sistema mediante capas horizontales, como presentación, lógica de negocio y datos, en lugar de dividirlo según los dominios funcionales.
+Favorece la simplicidad inicial (frontera por capa técnica: presentación, lógica, datos), pero concentraría la lógica de negocio de dominios que queremos mantener independientes (búsqueda, calificación, moderación) en las mismas capas de servicio. Un cambio en las reglas de un dominio arrastraría cambios transversales en capas compartidas, justo el riesgo que el estilo introduce según su costo declarado ("cambios transversales").
 
-Se descartó porque no separa de manera clara las cinco áreas funcionales de ShareU. Un cambio en una funcionalidad, por ejemplo **calificaciones**, podría requerir modificaciones en las mismas capas compartidas con **documentos** o **búsqueda**, aumentando el acoplamiento entre dominios que el equipo busca mantener independientes.
+### Hexagonal (puertos y adaptadores) — descartada por ahora
 
-**Criterio de reapertura:** si el equipo necesita compartir una cantidad significativa de lógica transversal entre capas, por ejemplo, un motor de reglas común, y la separación por módulos dificulta su implementación.
-
-### Hexagonal (Ports and Adapters) — descartada por ahora
-
-Aísla la lógica de dominio mediante puertos e interfaces, permitiendo cambiar adaptadores como HTTP, bases de datos o servicios externos sin modificar directamente la lógica de negocio.
-
-Se descartó para esta etapa porque el costo inicial de diseñar y mantener puertos e interfaces es elevado para un equipo con poca experiencia en este patrón. Además, actualmente no existen múltiples adaptadores reales que deban intercambiarse, por lo que el beneficio inmediato no justifica la complejidad adicional.
-
-**Criterio de reapertura:** si en semanas posteriores aparece la necesidad real de utilizar más de un adaptador por módulo, por ejemplo, otro proveedor de almacenamiento o dobles de infraestructura para pruebas, o si el equipo adquiere suficiente experiencia para asumir el costo de diseño.
+Ofrece mejor testabilidad y facilidad para sustituir adaptadores (p. ej., cambiar el motor de almacenamiento de documentos), pero introduce más indirección y una curva de aprendizaje que el equipo, sin experiencia previa con el patrón y con tiempo limitado por semana de entrega, no puede sostener de forma consistente en las primeras iteraciones. Se reevaluará si aparece una necesidad concreta de sustituir infraestructura que justifique el costo.
 
 ## Consecuencias
 
-* **Se gana:** separación clara de los cinco dominios sin introducir la complejidad de coordinación propia de un sistema distribuido.
-* **Se gana:** una cadencia de desarrollo semanal compatible con el proyecto, ya que cada módulo puede evolucionar con relativa independencia dentro de un único despliegue.
-* **Se gana:** una curva de aprendizaje menor para el equipo, considerando su nivel de experiencia actual.
-* **Se gana:** la posibilidad de evolucionar posteriormente hacia una arquitectura hexagonal o servicios independientes, debido a que los módulos quedan delimitados desde esta etapa.
-* **Se asume:** la responsabilidad de controlar el acoplamiento entre módulos mediante revisiones de código y cumplimiento de las fronteras definidas.
-* **Se asume:** una futura migración a hexagonal o microservicios podría requerir refactorizar algunos límites internos, debido a que inicialmente no existirán interfaces formales entre todos los módulos.
+* **Se gana:** organización que refleja el modelo real de ShareU, facilitando ubicar y modificar funcionalidad de un dominio sin tocar los demás.
+* **Se asume:** vigilar el acoplamiento entre módulos es responsabilidad del equipo; sin revisión constante en cada entrega, los límites pueden erosionarse (riesgo propio de este estilo).
+* **Queda abierto:** extraer un módulo (por ejemplo, búsqueda, si el rendimiento lo exige) hacia un servicio independiente en una fase posterior, sin rediseñar el sistema completo — esto da soporte a la escalabilidad como objetivo de calidad de prioridad media.
+* **No se obtiene**, en esta fase, el nivel de testabilidad por sustitución de adaptadores que ofrecería hexagonal; se compensa con pruebas de integración por módulo.
 
-## Tácticas seleccionadas para los atributos de calidad
+## Tácticas seleccionadas para los atributos priorizados
 
-| Atributo            | Táctica elegida                                                                                                                              | Costo asumido                                                                                                                      |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **Usabilidad**      | Filtros visibles y datos clave en los resultados de búsqueda, evitando que el usuario tenga que abrir cada publicación (`docs/aspectos.md`). | Mayor lógica de presentación que debe mantenerse sincronizada con el módulo de búsqueda.                                           |
-| **Seguridad**       | Control de acceso basado en roles, diferenciando entre estudiante y administrador.                                                           | Mayor complejidad en las validaciones y una pequeña sobrecarga por las comprobaciones de permisos.                                 |
-| **Rendimiento**     | Uso de índices y caché dentro del módulo `busqueda`.                                                                                         | Necesidad de definir y mantener una política adecuada de actualización e invalidación de caché.                                    |
-| **Modificabilidad** | Aplicación de principios SOLID y GRASP dentro de cada módulo, utilizando la frontera del módulo como frontera del dominio.                   | Mayor cantidad de tipos y cierta indirección interna, aceptada frente al costo de implementar una arquitectura hexagonal completa. |
+| Atributo        | Táctica elegida                                                                                                             | Costo asumido                                                                                |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Usabilidad      | Filtros visibles en la misma vista de resultados; resultados con info clave sin abrir cada publicación (`docs/aspectos.md`) | Más lógica de presentación a mantener sincronizada con el módulo de búsqueda                 |
+| Seguridad       | Control de acceso por tipo de usuario (estudiante/administrador), auditoría de reportes                                     | Fricción adicional de uso, latencia por validaciones                                         |
+| Rendimiento     | Índice y caché en el módulo de búsqueda                                                                                     | Necesidad de política de invalidación declarada                                              |
+| Modificabilidad | SOLID/GRASP dentro de cada módulo; frontera de módulo = frontera de dominio                                                 | Más tipos e indirección interna, aceptado por ser el costo menor frente a hexagonal completo |
 
 ## Referencia
 
-La decisión está motivada por los requisitos de los cinco dominios de ShareU, la necesidad de realizar entregas incrementales durante el proyecto y las restricciones actuales de experiencia del equipo con patrones arquitectónicos avanzados.
+Motivado por el escenario de calidad de usabilidad en `docs/aspectos.md` y por la sección "Solution Strategy" de `docs/arc42-template-EN.md`.
