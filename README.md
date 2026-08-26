@@ -12,5 +12,3 @@ y la sección "Solution Strategy" de [`docs/arc42-template-EN.md`](docs/arc42-te
 Módulos: `usuarios`, `documentos`, `busqueda`, `calificaciones`, `administracion`.
 Cada uno vive en `app/<modulo>/` con su propio router; todavía sin lógica de
 negocio (fontanería para el corte vertical de la semana 4).
-
-## Esqueleto ejecutable — arranque
