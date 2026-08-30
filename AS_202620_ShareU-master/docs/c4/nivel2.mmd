@@ -1,0 +1,38 @@
+---
+config:
+  layout: elk
+---
+C4Container
+    title ShareU — C4 Nivel 2 (contenedores)
+
+    Person(estudiante, "Estudiante", "Busca y consulta material académico")
+    Person(admin, "Administrador", "Gestiona usuarios, documentos y reportes")
+
+    System_Boundary(shareu, "ShareU") {
+        Container(web, "Aplicación web", "HTML/CSS/JavaScript", "Interfaz de estudiantes y administradores")
+        Container(api, "API backend", "Python + FastAPI", "Expone la API y compone los módulos del monolito")
+        ContainerDb(db, "Base de datos", "SQLite / SQL", "Persiste metadatos de documentos en el corte vertical")
+        Container(storage, "Almacenamiento de archivos", "Servicio externo", "Guarda archivos académicos")
+        Container(mail, "Servicio de correo", "SMTP/API", "Envía notificaciones")
+    }
+
+    Container_Boundary(modulos, "Módulos del backend") {
+        Container(usuarios, "Usuarios", "Módulo", "Registro, autenticación y perfiles")
+        Container(documentos, "Documentos", "Módulo", "Clasificación y persistencia")
+        Container(busqueda, "Búsqueda", "Módulo", "Filtros y ordenamiento de resultados")
+        Container(calificaciones, "Calificaciones", "Módulo", "Valoraciones")
+        Container(admin, "Administración", "Módulo", "Reportes y moderación")
+    }
+
+    Rel(estudiante, web, "Utiliza")
+    Rel(admin, web, "Utiliza")
+    Rel(web, api, "Consume", "JSON/HTTPS")
+    Rel(api, usuarios, "Enruta solicitudes")
+    Rel(api, documentos, "Enruta solicitudes")
+    Rel(api, busqueda, "Enruta solicitudes")
+    Rel(api, calificaciones, "Enruta solicitudes")
+    Rel(api, admin, "Enruta solicitudes")
+    Rel(busqueda, documentos, "Consulta mediante interfaz de servicio")
+    Rel(documentos, db, "Lee y escribe", "SQL")
+    Rel(api, storage, "Guarda/recupera archivos")
+    Rel(api, mail, "Envía notificaciones")

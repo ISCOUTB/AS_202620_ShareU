@@ -1,0 +1,46 @@
+---
+config:
+  layout: elk
+---
+C4Container
+    title Diagrama de Contenedores — shareU
+
+    Person(estudiante, "Estudiante", "Busca, sube, descarga y califica material académico")
+    Person(admin, "Administrador", "Gestiona usuarios, documentos y reportes")
+
+    System_Ext(almacenamiento, "Almacenamiento de archivos", "Guarda y recupera documentos académicos")
+    System_Ext(correo, "Servicio de correo", "Envía notificaciones transaccionales")
+
+    Container_Boundary(shareu, "shareU") {
+        Container(frontend, "Aplicación web", "HTML, CSS y JavaScript", "Interfaz para estudiantes y administradores")
+        Container(api, "API backend", "REST sobre HTTPS", "Gestiona autenticación, usuarios, documentos, búsquedas, descargas, calificaciones y reportes")
+        ContainerDb(basedatos, "Base de datos", "SQL relacional", "Almacena usuarios, universidades, carreras, materias, documentos, calificaciones y reportes")
+    }
+
+    Rel(estudiante, frontend, "Utiliza", "HTTPS")
+    Rel(admin, frontend, "Administra", "HTTPS")
+
+    Rel(frontend, api, "Consume la API", "JSON/HTTPS")
+    Rel(api, frontend, "Devuelve datos y resultados", "JSON/HTTPS")
+
+    Rel(api, basedatos, "Lee y escribe información", "SQL")
+    Rel(api, almacenamiento, "Guarda y recupera documentos", "HTTPS/API")
+    Rel(api, correo, "Envía notificaciones", "SMTP/API")
+
+    UpdateElementStyle(estudiante, $fontColor="#1e1b4b", $bgColor="#eef2ff", $borderColor="#6366f1")
+    UpdateElementStyle(admin, $fontColor="#064e3b", $bgColor="#f0fdf4", $borderColor="#4ade80")
+    UpdateElementStyle(frontend, $fontColor="#164e63", $bgColor="#ecfeff", $borderColor="#22d3ee")
+    UpdateElementStyle(api, $fontColor="#581c87", $bgColor="#f5f3ff", $borderColor="#a78bfa")
+    UpdateElementStyle(basedatos, $fontColor="#7c2d12", $bgColor="#fff7ed", $borderColor="#fb923c")
+    UpdateElementStyle(almacenamiento, $fontColor="#7c2d12", $bgColor="#fff7ed", $borderColor="#fb923c")
+    UpdateElementStyle(correo, $fontColor="#831843", $bgColor="#fdf4ff", $borderColor="#e879f9")
+
+    UpdateRelStyle(estudiante, frontend, $textColor="#4338ca", $lineColor="#6366f1", $offsetY="-20")
+    UpdateRelStyle(admin, frontend, $textColor="#15803d", $lineColor="#4ade80", $offsetY="20")
+    UpdateRelStyle(frontend, api, $textColor="#0891b2", $lineColor="#22d3ee", $offsetY="-20")
+    UpdateRelStyle(api, frontend, $textColor="#0891b2", $lineColor="#22d3ee", $offsetY="20")
+    UpdateRelStyle(api, basedatos, $textColor="#c2410c", $lineColor="#fb923c", $offsetX="-35")
+    UpdateRelStyle(api, almacenamiento, $textColor="#c2410c", $lineColor="#fb923c", $offsetY="-20")
+    UpdateRelStyle(api, correo, $textColor="#a21caf", $lineColor="#e879f9", $offsetY="20")
+
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
