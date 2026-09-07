@@ -55,7 +55,7 @@ source .venv/bin/activate
 Instalar dependencias:
 
 ```bash
-python -m pip install -r requirements.txt
+python -m pip install --require-hashes -r requirements.txt
 ```
 
 ## Ejecución
