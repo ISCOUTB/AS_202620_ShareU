@@ -18,7 +18,7 @@ jobs:
           cache: "pip"
 
       - name: Instalar dependencias
-        run: python -m pip install -r requirements.txt
+        run: python -m pip install --require-hashes -r requisitos.txt
 
       - name: Ejecutar pruebas
         run: pytest -q
