@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MiApp — material académico compartido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">shareU</div>
+    <ul class="modules" id="modules">
+      <li data-modulo="usuarios">usuarios</li>
+      <li data-modulo="documentos">documentos</li>
+      <li data-modulo="busqueda">búsqueda</li>
+      <li data-modulo="calificaciones">calificaciones</li>
+      <li data-modulo="administracion">administración</li>
+    </ul>
+    <button id="modo-btn" class="modo-btn" title="Intentar conectar con el backend real">chance mode</button>
+  </header>
+
+  <section class="hero">
+    <h1>Encuentra lo que tu compañero<br>ya resolvió.</h1>
+    <p class="sub">Apuntes, talleres y parciales organizados por universidad, carrera y materia.</p>
+
+    <form class="buscador" id="form-busqueda">
+      <input
+        type="text"
+        id="input-busqueda"
+        placeholder="Busca por título, materia o palabra clave…"
+        autocomplete="off"
+      >
+      <button type="submit">Buscar</button>
+    </form>
+
+    <div class="filtros">
+      <select id="filtro-carrera">
+        <option value="">Todas las carreras</option>
+      </select>
+      <select id="filtro-tipo">
+        <option value="">Todos los tipos</option>
+      </select>
+    </div>
+  </section>
+
+  <main>
+    <div class="resultados-header">
+      <h2 id="contador">— resultados</h2>
+    </div>
+    <ul class="fichas" id="fichas"></ul>
+  </main>
+
+  <footer>
+    <p>Arquitectura: monolito modular · <span id="estado-backend"></span></p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
