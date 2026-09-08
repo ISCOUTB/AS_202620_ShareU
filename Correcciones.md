@@ -9,7 +9,7 @@ de la semana 5 (corte 1), aclara dos premisas de la ficha que no aplicaban a
 nuestro equipo, y deja constancia de las correcciones que sí se hicieron sobre
 el repositorio.
 
-## 1. Sobre el reto / restricción asignada
+## 1. Sobre el reto / restricción asignada 
 
 La ficha `semana-05-corte1.md` y la revisión asumen que a cada equipo se le
 asignó una restricción arquitectónica nueva para diagnosticar, decidir e
