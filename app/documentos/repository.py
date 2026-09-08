@@ -13,6 +13,10 @@ from typing import Any
 BASE_DIR = Path(__file__).resolve().parents[2]
 DEFAULT_DB = BASE_DIR / "data" / "shareu.db"
 
+_UNIVERSIDAD_NACIONAL = "Universidad Nacional"
+_UNIVERSIDAD_DEL_NORTE = "Universidad del Norte"
+_INGENIERIA_SISTEMAS = "Ingeniería de Sistemas"
+
 
 def _db_path() -> Path:
     return Path(os.getenv("SHAREU_DB_PATH", DEFAULT_DB))
@@ -51,16 +55,16 @@ def _initialize(connection: sqlite3.Connection) -> None:
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
-                ("Taller de Python", "Universidad Nacional", "Ingeniería de Sistemas",
+                ("Taller de Python", _UNIVERSIDAD_NACIONAL, _INGENIERIA_SISTEMAS,
                  "Programación", "Taller", "Ana", 4.8, "python programación funciones"),
-                ("Parcial de Bases de Datos", "Universidad Nacional", "Ingeniería de Sistemas",
+                ("Parcial de Bases de Datos", _UNIVERSIDAD_NACIONAL, _INGENIERIA_SISTEMAS,
                  "Bases de Datos", "Parcial", "Carlos", 4.5, "sql bases datos parcial"),
-                ("Apuntes de Arquitectura de Software", "Universidad Nacional",
-                 "Ingeniería de Sistemas", "Arquitectura de Software", "Apuntes",
+                ("Apuntes de Arquitectura de Software", _UNIVERSIDAD_NACIONAL,
+                 _INGENIERIA_SISTEMAS, "Arquitectura de Software", "Apuntes",
                  "María", 4.7, "arquitectura software adr c4"),
-                ("Ejercicios de Cálculo", "Universidad del Norte", "Ingeniería de Sistemas",
+                ("Ejercicios de Cálculo", _UNIVERSIDAD_DEL_NORTE, _INGENIERIA_SISTEMAS,
                  "Cálculo", "Ejercicios", "Luis", 4.2, "calculo derivadas integrales"),
-                ("Guía de Redes", "Universidad del Norte", "Ingeniería de Telecomunicaciones",
+                ("Guía de Redes", _UNIVERSIDAD_DEL_NORTE, "Ingeniería de Telecomunicaciones",
                  "Redes", "Guía", "Sofía", 4.6, "redes tcp ip protocolos"),
             ],
         )

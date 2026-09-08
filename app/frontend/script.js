@@ -1,4 +1,7 @@
-
+// ---------------------------------------------------------------
+// Datos de ejemplo (para presentar sin depender del backend).
+// Coinciden con la forma de los datos que devuelve /busqueda/documentos.
+// ---------------------------------------------------------------
 const DOCUMENTOS_EJEMPLO = [
   { titulo: "Taller de Python", universidad: "Universidad Nacional", carrera: "Ingeniería de Sistemas", materia: "Programación", tipo: "Taller", autor: "Ana", calificacion: 4.8 },
   { titulo: "Parcial de Bases de Datos", universidad: "Universidad Nacional", carrera: "Ingeniería de Sistemas", materia: "Bases de Datos", tipo: "Parcial", autor: "Carlos", calificacion: 4.5 },
@@ -14,9 +17,7 @@ let documentosActuales = DOCUMENTOS_EJEMPLO;
 
 const form = document.getElementById("form-busqueda");
 const input = document.getElementById("input-busqueda");
-const filtroUniversidad = document.getElementById("filtro-universidad");
 const filtroCarrera = document.getElementById("filtro-carrera");
-const filtroMateria = document.getElementById("filtro-materia");
 const filtroTipo = document.getElementById("filtro-tipo");
 const fichasEl = document.getElementById("fichas");
 const contadorEl = document.getElementById("contador");
@@ -25,19 +26,13 @@ const estadoBackendEl = document.getElementById("estado-backend");
 const modulosEls = document.querySelectorAll("#modules li");
 
 function poblarFiltros(documentos) {
-  const universidades = [...new Set(documentos.map(d => d.universidad))].sort();
-  const carreras = [...new Set(documentos.map(d => d.carrera))].sort();
-  const materias = [...new Set(documentos.map(d => d.materia))].sort();
-  const tipos = [...new Set(documentos.map(d => d.tipo))].sort();
+  const carreras = [...new Set(documentos.map(d => d.carrera))].sort((a, b) => a.localeCompare(b));
+  const tipos = [...new Set(documentos.map(d => d.tipo))].sort((a, b) => a.localeCompare(b));
 
-  filtroUniversidad.innerHTML = '<option value="">Todas las universidades</option>' +
-    universidades.map(v => `<option value="${v}">${v}</option>`).join("");
   filtroCarrera.innerHTML = '<option value="">Todas las carreras</option>' +
-    carreras.map(v => `<option value="${v}">${v}</option>`).join("");
-  filtroMateria.innerHTML = '<option value="">Todas las materias</option>' +
-    materias.map(v => `<option value="${v}">${v}</option>`).join("");
+    carreras.map(c => `<option value="${c}">${c}</option>`).join("");
   filtroTipo.innerHTML = '<option value="">Todos los tipos</option>' +
-    tipos.map(v => `<option value="${v}">${v}</option>`).join("");
+    tipos.map(t => `<option value="${t}">${t}</option>`).join("");
 }
 
 function renderFichas(documentos) {
@@ -61,50 +56,35 @@ function renderFichas(documentos) {
   `).join("");
 }
 
-async function aplicarFiltros() {
-  const q = input.value.trim();
-  const universidad = filtroUniversidad.value;
+function aplicarFiltros() {
+  const q = input.value.trim().toLowerCase();
   const carrera = filtroCarrera.value;
-  const materia = filtroMateria.value;
   const tipo = filtroTipo.value;
 
-  if (modoBackend) {
-    const params = new URLSearchParams();
-    if (universidad) params.set("universidad", universidad);
-    if (carrera) params.set("carrera", carrera);
-    if (materia) params.set("materia", materia);
-    if (tipo) params.set("tipo", tipo);
-    if (q) params.set("palabra_clave", q);
-
-    try {
-      const res = await fetch(`${BACKEND_URL}/busqueda/documentos?${params.toString()}`);
-      if (!res.ok) throw new Error("respuesta no ok");
-      const data = await res.json();
-      renderFichas(data.resultados);
-      return;
-    } catch {
-      estadoBackendEl.textContent = "backend no disponible durante la búsqueda";
-      return;
-    }
-  }
-
-  const qLower = q.toLowerCase();
   const filtrados = documentosActuales.filter(d => {
-    const coincideTexto = !qLower ||
-      d.titulo.toLowerCase().includes(qLower) ||
-      d.materia.toLowerCase().includes(qLower) ||
-      d.palabras_clave?.toLowerCase().includes(qLower);
-    const coincideUniversidad = !universidad || d.universidad === universidad;
+    const coincideTexto = !q ||
+      d.titulo.toLowerCase().includes(q) ||
+      d.materia.toLowerCase().includes(q);
     const coincideCarrera = !carrera || d.carrera === carrera;
-    const coincideMateria = !materia || d.materia === materia;
     const coincideTipo = !tipo || d.tipo === tipo;
-    return coincideTexto && coincideUniversidad && coincideCarrera && coincideMateria && coincideTipo;
+    return coincideTexto && coincideCarrera && coincideTipo;
   }).sort((a, b) => b.calificacion - a.calificacion);
 
   renderFichas(filtrados);
 }
 
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  aplicarFiltros();
+});
+input.addEventListener("input", aplicarFiltros);
+filtroCarrera.addEventListener("change", aplicarFiltros);
+filtroTipo.addEventListener("change", aplicarFiltros);
 
+// ---------------------------------------------------------------
+// Modo backend real (opcional): intenta hablar con uvicorn en
+// 127.0.0.1:8000. Si no responde, se queda en modo ejemplo.
+// ---------------------------------------------------------------
 async function marcarModulos(activo) {
   for (const li of modulosEls) {
     const modulo = li.dataset.modulo;
@@ -159,6 +139,6 @@ modoBtn.addEventListener("click", () => {
   }
 });
 
-
+// Estado inicial: datos de ejemplo, sin tocar la red.
 poblarFiltros(documentosActuales);
 aplicarFiltros();
