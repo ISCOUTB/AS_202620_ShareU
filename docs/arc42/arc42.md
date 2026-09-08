@@ -81,8 +81,10 @@ desplegable, pero cada dominio mantiene una responsabilidad y una frontera
 explícita.
 
 La comparación de alternativas está en
-[`../aspectos/aspectos.md`](../aspectos/aspectos.md), y la decisión formal en
-[`../adr/0001-estilo-arquitectonico.md`](../adr/0001-estilo-arquitectonico.md).
+[`../aspectos/aspectos.md`](../aspectos/aspectos.md). La decisión arquitectónica
+base está en [`../adr/0001-estilo-arquitectonico.md`](../adr/0001-estilo-arquitectonico.md)
+y la decisión específica del flujo de búsqueda en
+[`../adr/0002-usabilidad-busqueda-en-una-solicitud.md`](../adr/0002-usabilidad-busqueda-en-una-solicitud.md).
 
 ## Módulos
 

@@ -14,7 +14,9 @@ let documentosActuales = DOCUMENTOS_EJEMPLO;
 
 const form = document.getElementById("form-busqueda");
 const input = document.getElementById("input-busqueda");
+const filtroUniversidad = document.getElementById("filtro-universidad");
 const filtroCarrera = document.getElementById("filtro-carrera");
+const filtroMateria = document.getElementById("filtro-materia");
 const filtroTipo = document.getElementById("filtro-tipo");
 const fichasEl = document.getElementById("fichas");
 const contadorEl = document.getElementById("contador");
@@ -23,13 +25,19 @@ const estadoBackendEl = document.getElementById("estado-backend");
 const modulosEls = document.querySelectorAll("#modules li");
 
 function poblarFiltros(documentos) {
+  const universidades = [...new Set(documentos.map(d => d.universidad))].sort();
   const carreras = [...new Set(documentos.map(d => d.carrera))].sort();
+  const materias = [...new Set(documentos.map(d => d.materia))].sort();
   const tipos = [...new Set(documentos.map(d => d.tipo))].sort();
 
+  filtroUniversidad.innerHTML = '<option value="">Todas las universidades</option>' +
+    universidades.map(v => `<option value="${v}">${v}</option>`).join("");
   filtroCarrera.innerHTML = '<option value="">Todas las carreras</option>' +
-    carreras.map(c => `<option value="${c}">${c}</option>`).join("");
+    carreras.map(v => `<option value="${v}">${v}</option>`).join("");
+  filtroMateria.innerHTML = '<option value="">Todas las materias</option>' +
+    materias.map(v => `<option value="${v}">${v}</option>`).join("");
   filtroTipo.innerHTML = '<option value="">Todos los tipos</option>' +
-    tipos.map(t => `<option value="${t}">${t}</option>`).join("");
+    tipos.map(v => `<option value="${v}">${v}</option>`).join("");
 }
 
 function renderFichas(documentos) {
@@ -53,30 +61,48 @@ function renderFichas(documentos) {
   `).join("");
 }
 
-function aplicarFiltros() {
-  const q = input.value.trim().toLowerCase();
+async function aplicarFiltros() {
+  const q = input.value.trim();
+  const universidad = filtroUniversidad.value;
   const carrera = filtroCarrera.value;
+  const materia = filtroMateria.value;
   const tipo = filtroTipo.value;
 
+  if (modoBackend) {
+    const params = new URLSearchParams();
+    if (universidad) params.set("universidad", universidad);
+    if (carrera) params.set("carrera", carrera);
+    if (materia) params.set("materia", materia);
+    if (tipo) params.set("tipo", tipo);
+    if (q) params.set("palabra_clave", q);
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/busqueda/documentos?${params.toString()}`);
+      if (!res.ok) throw new Error("respuesta no ok");
+      const data = await res.json();
+      renderFichas(data.resultados);
+      return;
+    } catch {
+      estadoBackendEl.textContent = "backend no disponible durante la búsqueda";
+      return;
+    }
+  }
+
+  const qLower = q.toLowerCase();
   const filtrados = documentosActuales.filter(d => {
-    const coincideTexto = !q ||
-      d.titulo.toLowerCase().includes(q) ||
-      d.materia.toLowerCase().includes(q);
+    const coincideTexto = !qLower ||
+      d.titulo.toLowerCase().includes(qLower) ||
+      d.materia.toLowerCase().includes(qLower) ||
+      d.palabras_clave?.toLowerCase().includes(qLower);
+    const coincideUniversidad = !universidad || d.universidad === universidad;
     const coincideCarrera = !carrera || d.carrera === carrera;
+    const coincideMateria = !materia || d.materia === materia;
     const coincideTipo = !tipo || d.tipo === tipo;
-    return coincideTexto && coincideCarrera && coincideTipo;
+    return coincideTexto && coincideUniversidad && coincideCarrera && coincideMateria && coincideTipo;
   }).sort((a, b) => b.calificacion - a.calificacion);
 
   renderFichas(filtrados);
 }
-
-form.addEventListener("submit", (e) => {
-  e.preventDefault();
-  aplicarFiltros();
-});
-input.addEventListener("input", aplicarFiltros);
-filtroCarrera.addEventListener("change", aplicarFiltros);
-filtroTipo.addEventListener("change", aplicarFiltros);
 
 
 async function marcarModulos(activo) {

@@ -55,7 +55,7 @@ source .venv/bin/activate
 Instalar dependencias:
 
 ```bash
-python -m pip install --require-hashes -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 ## Ejecución
@@ -117,11 +117,17 @@ Los cinco módulos conservan un endpoint de verificación:
 - `/calificaciones/ping`
 - `/administracion/ping`
 
-## Pruebas
+## Pruebas y medición
 
 ```bash
 pytest -q
 ```
+
+El escenario de usabilidad se verifica también mediante una medición reproducible:
+una búsqueda con cualquier combinación de criterios se resuelve mediante **una sola
+solicitud HTTP** al endpoint `/busqueda/documentos`. El objetivo es mantener el
+flujo de búsqueda dentro del umbral de **3 interacciones o menos**. La evidencia
+metodológica se encuentra en [`docs/evidencia/medicion-usabilidad.md`](docs/evidencia/medicion-usabilidad.md).
 
 El workflow de GitHub Actions en
 [`.github/workflows/tests.yml`](.github/workflows/tests.yml) ejecuta estas
@@ -134,4 +140,4 @@ pruebas automáticamente en cada `push` y `pull_request`.
 - [C4 nivel 2](docs/c4/nivel-2.md) — [diagrama editable](docs/c4/nivel2.mmd)
 - [ADR 0001](docs/adr/0001-estilo-arquitectonico.md)
 - [Aspectos de calidad](docs/aspectos/aspectos.md)
-- [Uso de IA](docs/ia.md)
+- [Uso de IA](docs/ia/ia.md)

@@ -30,20 +30,27 @@
       <input
         type="text"
         id="input-busqueda"
-        placeholder="Busca por título, materia o palabra clave…"
+        placeholder="Busca por título o palabra clave…"
         autocomplete="off"
       >
       <button type="submit">Buscar</button>
     </form>
 
     <div class="filtros">
-      <select id="filtro-carrera">
+      <select id="filtro-universidad" aria-label="Universidad">
+        <option value="">Todas las universidades</option>
+      </select>
+      <select id="filtro-carrera" aria-label="Carrera">
         <option value="">Todas las carreras</option>
       </select>
-      <select id="filtro-tipo">
+      <select id="filtro-materia" aria-label="Materia">
+        <option value="">Todas las materias</option>
+      </select>
+      <select id="filtro-tipo" aria-label="Tipo de material">
         <option value="">Todos los tipos</option>
       </select>
     </div>
+    <p class="ayuda-busqueda">Combina los criterios y presiona <strong>Buscar</strong>. Todos los filtros se envían en una sola solicitud.</p>
   </section>
 
   <main>

@@ -75,7 +75,8 @@ tipo, autor y calificación.
 
 ## Trazabilidad
 
-- Decisión arquitectónica: [`../adr/0001-estilo-arquitectonico.md`](../adr/0001-estilo-arquitectonico.md)
+- Decisión arquitectónica base: [`../adr/0001-estilo-arquitectonico.md`](../adr/0001-estilo-arquitectonico.md)
+- Decisión específica de usabilidad: [`../adr/0002-usabilidad-busqueda-en-una-solicitud.md`](../adr/0002-usabilidad-busqueda-en-una-solicitud.md)
 - Escenario de usabilidad: [`../aspectos/aspectos.md`](../aspectos/aspectos.md)
 - Implementación: `app/busqueda/` y `app/documentos/`
 - Pruebas: `tests/test_busqueda.py`
