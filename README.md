@@ -1,5 +1,7 @@
 # AS_202620_ShareU
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ISCOUTB_AS_202620_ShareU&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ISCOUTB_AS_202620_ShareU)
+
 ShareU es una plataforma web para compartir y encontrar material académico
 organizado por universidad, carrera y materia.
 
