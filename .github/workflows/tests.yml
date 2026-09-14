@@ -16,5 +16,5 @@ jobs:
       - name: Instalar dependencias
         run: python -m pip install --require-hashes -r requirements.txt
       - name: Ejecutar pruebas
-        run: pytest -q
+        run: PYTHONPATH=. pytest -q
 
