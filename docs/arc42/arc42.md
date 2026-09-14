@@ -191,6 +191,9 @@ permite evaluar la extracción del módulo correspondiente.
 
 # 8. Conceptos transversales
 
+El lenguaje de dominio y los contextos delimitados se documentan en docs/ddd/contextos.md, junto con la propiedad de datos por módulo (docs/ddd/propiedad-datos.md) y las violaciones detectadas con su plan de corrección (docs/ddd/auditoria-violaciones.md).
+
+
 ## 8.1 Separación por dominio
 
 Cada carpeta de `app/` representa un dominio. Esto reduce cambios
