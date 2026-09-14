@@ -51,8 +51,8 @@ exige participantes, esa actividad debe ejecutarse y anexarse como evidencia.
 
 | Requisito / restricción | Aspecto | ADR | Código | Prueba | Evidencia |
 |---|---|---|---|---|---|
-| ≤ 3 interacciones | Usabilidad | ADR 0002 | `app/frontend/`, `app/busqueda/` | `test_busqueda_combina_filtros` | `docs/evidencia/medicion-usabilidad.md` |
-| Arquitectura por dominios | Modificabilidad / simplicidad | ADR 0001 | `app/*` | `tests/test_esqueleto.py` | ADR 0001 |
+| ≤ 3 interacciones | Usabilidad | [ADR 0002](https://github.com/ISCOUTB/AS_202620_ShareU/blob/b7737be88997143da3d03acdec6d9c3419c402f4/docs/adr/0002-usabilidad-busqueda-en-una-solicitud.md) | [`app/frontend/`](https://github.com/ISCOUTB/AS_202620_ShareU/tree/b7737be88997143da3d03acdec6d9c3419c402f4/app/frontend), [`app/busqueda/`](https://github.com/ISCOUTB/AS_202620_ShareU/tree/b7737be88997143da3d03acdec6d9c3419c402f4/app/busqueda) | [`test_busqueda_combina_filtros`](https://github.com/ISCOUTB/AS_202620_ShareU/blob/b7737be88997143da3d03acdec6d9c3419c402f4/tests/test_busqueda.py#L36-L50) | [`medicion-usabilidad.md`](https://github.com/ISCOUTB/AS_202620_ShareU/blob/b7737be88997143da3d03acdec6d9c3419c402f4/docs/evidencia/medicion-usabilidad.md) |
+| Arquitectura por dominios | Modificabilidad / simplicidad | [ADR 0001](https://github.com/ISCOUTB/AS_202620_ShareU/blob/b7737be88997143da3d03acdec6d9c3419c402f4/docs/adr/0001-estilo-arquitectonico.md) | [`app/*`](https://github.com/ISCOUTB/AS_202620_ShareU/tree/b7737be88997143da3d03acdec6d9c3419c402f4/app) | [`tests/test_esqueleto.py`](https://github.com/ISCOUTB/AS_202620_ShareU/blob/b7737be88997143da3d03acdec6d9c3419c402f4/tests/test_esqueleto.py) | [ADR 0001](https://github.com/ISCOUTB/AS_202620_ShareU/blob/b7737be88997143da3d03acdec6d9c3419c402f4/docs/adr/0001-estilo-arquitectonico.md) |
 
 ## Decisión arquitectónica relacionada
 
