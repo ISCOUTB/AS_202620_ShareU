@@ -1,0 +1,249 @@
+openapi: 3.1.0
+info:
+  title: ShareU API
+  description: >
+    Contrato de la API pública de ShareU. Esta versión cubre el corte
+    vertical implementado: verificación de salud, verificación por módulo
+    (`/ping`) y la búsqueda combinada de documentos académicos. Otros
+    endpoints (usuarios, calificaciones, administración) se agregarán a
+    este contrato cuando su lógica de negocio se implemente; hasta entonces
+    solo se contratan sus rutas `/ping`.
+  version: 1.0.0
+  contact:
+    name: Equipo ShareU
+    url: https://github.com/ISCOUTB/AS_202620_ShareU
+servers:
+  - url: http://127.0.0.1:8000
+    description: Entorno local (uvicorn --reload)
+
+tags:
+  - name: sistema
+  - name: usuarios
+  - name: documentos
+  - name: busqueda
+  - name: calificaciones
+  - name: administracion
+
+paths:
+  /health:
+    get:
+      tags: [sistema]
+      operationId: verificarSalud
+      summary: Verifica que la API está operativa.
+      responses:
+        "200":
+          description: La API responde correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Estado"
+              examples:
+                ok:
+                  value: { estado: "ok" }
+
+  /usuarios/ping:
+    get:
+      tags: [usuarios]
+      operationId: pingUsuarios
+      summary: Verifica que el módulo usuarios está montado.
+      responses:
+        "200":
+          description: Módulo activo.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EstadoModulo"
+
+  /documentos/ping:
+    get:
+      tags: [documentos]
+      operationId: pingDocumentos
+      summary: Verifica que el módulo documentos está montado.
+      responses:
+        "200":
+          description: Módulo activo.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EstadoModulo"
+
+  /busqueda/ping:
+    get:
+      tags: [busqueda]
+      operationId: pingBusqueda
+      summary: Verifica que el módulo búsqueda está montado.
+      responses:
+        "200":
+          description: Módulo activo.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EstadoModulo"
+
+  /calificaciones/ping:
+    get:
+      tags: [calificaciones]
+      operationId: pingCalificaciones
+      summary: Verifica que el módulo calificaciones está montado.
+      responses:
+        "200":
+          description: Módulo activo.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EstadoModulo"
+
+  /administracion/ping:
+    get:
+      tags: [administracion]
+      operationId: pingAdministracion
+      summary: Verifica que el módulo administración está montado.
+      responses:
+        "200":
+          description: Módulo activo.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EstadoModulo"
+
+  /busqueda/documentos:
+    get:
+      tags: [busqueda]
+      operationId: buscarDocumentos
+      summary: Busca material académico combinando filtros opcionales.
+      description: >
+        Endpoint central del escenario de usabilidad (docs/aspectos/aspectos.md):
+        todos los criterios se combinan en una sola solicitud. Todos los
+        parámetros son opcionales; sin parámetros devuelve todos los
+        documentos ordenados por calificación descendente.
+      parameters:
+        - name: universidad
+          in: query
+          required: false
+          schema: { type: string }
+          example: "Universidad Nacional"
+        - name: carrera
+          in: query
+          required: false
+          schema: { type: string }
+          example: "Ingeniería de Sistemas"
+        - name: materia
+          in: query
+          required: false
+          schema: { type: string }
+          example: "Programación"
+        - name: tipo
+          in: query
+          required: false
+          schema: { type: string }
+          example: "Taller"
+        - name: palabra_clave
+          in: query
+          required: false
+          schema: { type: string }
+          description: Coincide contra el título o las palabras clave internas del documento.
+          example: "SQL"
+        - name: min_calificacion
+          in: query
+          required: false
+          schema: { type: number, format: float, minimum: 0, maximum: 5 }
+      responses:
+        "200":
+          description: Resultados de la búsqueda (puede ser una lista vacía).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultadoBusqueda"
+              examples:
+                conResultados:
+                  value:
+                    total: 1
+                    resultados:
+                      - id: 1
+                        titulo: "Taller de Python"
+                        universidad: "Universidad Nacional"
+                        carrera: "Ingeniería de Sistemas"
+                        materia: "Programación"
+                        tipo: "Taller"
+                        autor: "Ana"
+                        calificacion: 4.8
+                sinResultados:
+                  value: { total: 0, resultados: [] }
+        "422":
+          description: >
+            Parámetro inválido (p. ej. `min_calificacion` fuera del rango
+            [0, 5]). Formato de error estándar de FastAPI/Pydantic.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorValidacion"
+
+components:
+  schemas:
+    Estado:
+      type: object
+      required: [estado]
+      additionalProperties: false
+      properties:
+        estado: { type: string, enum: ["ok"] }
+
+    EstadoModulo:
+      type: object
+      required: [modulo, estado]
+      additionalProperties: false
+      properties:
+        modulo:
+          type: string
+          enum: [usuarios, documentos, busqueda, calificaciones, administracion]
+        estado: { type: string, enum: ["ok"] }
+
+    DocumentoResumen:
+      type: object
+      description: >
+        Proyección de solo lectura que expone búsqueda (docs/ddd/contextos.md).
+        No es el agregado completo de `documentos`; no incluye archivo,
+        palabras clave internas ni metadatos de auditoría.
+      required:
+        - id
+        - titulo
+        - universidad
+        - carrera
+        - materia
+        - tipo
+        - autor
+        - calificacion
+      additionalProperties: false
+      properties:
+        id: { type: integer }
+        titulo: { type: string }
+        universidad: { type: string }
+        carrera: { type: string }
+        materia: { type: string }
+        tipo: { type: string }
+        autor: { type: string }
+        calificacion: { type: number, format: float, minimum: 0, maximum: 5 }
+
+    ResultadoBusqueda:
+      type: object
+      required: [total, resultados]
+      additionalProperties: false
+      properties:
+        total: { type: integer, minimum: 0 }
+        resultados:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentoResumen"
+
+    ErrorValidacion:
+      type: object
+      required: [detail]
+      properties:
+        detail:
+          type: array
+          items:
+            type: object
+
+# Historial de versiones del contrato
+# 1.0.0 (2026-09, Semana 7): primera versión publicada. Cubre /health,
+#   /ping de los cinco módulos y GET /busqueda/documentos tal como está
+#   implementado desde el corte vertical de la semana 4.
