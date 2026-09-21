@@ -1,4 +1,3 @@
----
 date: agosto 2026
 title: "Documentación de arquitectura ShareU — arc42"
 ---
@@ -37,6 +36,10 @@ El escenario de usabilidad completo está en
 - Las pruebas se ejecutan con `pytest`.
 - La integración continua se realiza con GitHub Actions.
 - Las decisiones arquitectónicas se registran mediante ADR.
+- Toda API pública se especifica primero como contrato ejecutable
+  (OpenAPI/AsyncAPI) versionado en `docs/api/`, y ese contrato se verifica
+  con una prueba de contrato en el pipeline (ver ADR pendiente de esta
+  semana y `docs/api/openapi.yaml`).
 
 # 3. Contexto y alcance
 
@@ -153,21 +156,104 @@ calificación mínima. El resultado se ordena por calificación descendente.
 
 # 6. Vista de ejecución
 
-## Escenario: buscar material
+## 6.1 Escenario: buscar material (síncrono)
 
-1. El estudiante solicita `/busqueda/documentos`.
-2. El router recibe los filtros opcionales.
-3. `busqueda.service` obtiene documentos mediante la interfaz pública de
-   `documentos.service`.
-4. El repositorio consulta SQLite.
-5. El servicio de búsqueda aplica filtros y ordena resultados.
-6. FastAPI devuelve el total y los documentos relevantes.
+Contrato: [`docs/api/openapi.yaml`](../api/openapi.yaml) — `GET
+/busqueda/documentos`. Integración síncrona de extremo a extremo: el
+estudiante espera la respuesta HTTP para ver resultados (justificación de
+por qué es síncrona, y no asíncrona, en
+[`../adr/0004-integracion-sincrona-y-asincrona.md`](../adr/0004-integracion-sincrona-y-asincrona.md)).
 
-## Escenario: sin resultados
+| Paso | De → a | Protocolo / formato | Naturaleza |
+|---|---|---|---|
+| 1 | Estudiante → Aplicación web | HTTPS | Síncrono |
+| 2 | Aplicación web → `busqueda.router` | `GET /busqueda/documentos` · JSON/HTTPS | Síncrono |
+| 3 | `busqueda.router` → `busqueda.service` | Llamada de función Python | Síncrono, in-process |
+| 4 | `busqueda.service` → `documentos.service` | Llamada de función Python (interfaz de servicio, ADR 0001) | Síncrono, in-process |
+| 5 | `documentos.service` → `documentos.repository` | Llamada de función Python | Síncrono, in-process |
+| 6 | `documentos.repository` → SQLite | SQL | Síncrono |
+| 7 | Respuesta: SQLite → ... → Aplicación web | JSON/HTTPS, cuerpo validado contra `ResultadoBusqueda` en el contrato | Síncrono |
+
+```text
+Estudiante
+    |  HTTPS
+    v
+Aplicación web
+    |  GET /busqueda/documentos  (JSON/HTTPS)
+    v
+busqueda.router
+    |  función Python (in-process)
+    v
+busqueda.service
+    |  función Python (in-process) — interfaz de servicio
+    v
+documentos.service
+    |  función Python (in-process)
+    v
+documentos.repository
+    |  SQL
+    v
+SQLite
+```
+
+Toda la cadena de los pasos 3 a 6 ocurre dentro del mismo proceso — no hay
+llamada de red interna que decidir como síncrona o asíncrona; esa decisión
+ya la fijó ADR 0001 al declarar un monolito modular. Lo que sí queda sujeto
+a la decisión de esta semana es el borde del sistema (pasos 1-2 y las
+integraciones de la sección 6.3).
+
+## 6.2 Escenario: sin resultados
 
 Si ningún documento satisface los filtros, la API devuelve HTTP 200 con
-`total: 0` y una lista vacía. Esto permite que una interfaz futura muestre un
-mensaje claro y sugiera ajustar filtros.
+`total: 0` y una lista vacía (ver ejemplo `sinResultados` en el contrato).
+Esto permite que una interfaz futura muestre un mensaje claro y sugiera
+ajustar filtros. Sigue el mismo camino síncrono de la sección 6.1: no hay
+una ruta de fallo especial, es una respuesta válida del mismo contrato.
+
+## 6.3 Escenarios futuros: integraciones externas (ver ADR 0004)
+
+Estos flujos todavía no tienen código — se documentan aquí porque la
+decisión síncrono/asíncrono que los gobierna ya está tomada y debe guiar la
+implementación del próximo corte.
+
+**Publicar un documento (síncrono con almacenamiento):**
+
+```text
+Estudiante --HTTPS--> Aplicación web --JSON/HTTPS--> API backend
+                                                         |
+                                                REST/HTTPS (síncrono)
+                                                         v
+                                          Almacenamiento de archivos
+```
+
+La API espera la confirmación del almacenamiento antes de responder al
+estudiante; si falla, no se crea el registro en `documentos` (sin
+metadatos huérfanos).
+
+**Notificar por correo (asíncrono, evento/outbox):**
+
+```text
+API backend --publica evento (in-process)--> Cola / outbox
+                                                    |
+                                     entrega asíncrona, con reintentos
+                                                    v
+                                          Servicio de correo (SMTP/API)
+```
+
+La API responde al estudiante sin esperar la entrega del correo. El
+contrato de este evento se especificará en AsyncAPI cuando el módulo de
+notificaciones entre en alcance de un corte (hoy no hay implementación que
+contratar).
+
+## Resumen de naturaleza por integración
+
+| Integración | Naturaleza | Formato | Justificación |
+|---|---|---|---|
+| Aplicación web → API backend | Síncrona | JSON/HTTPS | El estudiante necesita ver el resultado en la misma interacción |
+| `busqueda` → `documentos` | Síncrona, in-process | Llamada de función | Ya resuelto por ADR 0001 (monolito modular) |
+| `documentos` → SQLite | Síncrona | SQL | La respuesta HTTP depende del dato leído/escrito |
+| API backend → Almacenamiento | Síncrona (futura) | REST/HTTPS | Publicar sin archivo confirmado no es un resultado válido |
+| API backend → Correo | Asíncrona (futura) | Evento / outbox | Efecto secundario; no debe acoplar disponibilidad del flujo crítico |
 
 # 7. Vista de despliegue
 
@@ -214,10 +300,25 @@ Los parámetros de la API se validan con FastAPI. Por ejemplo,
 Las pruebas se encuentran en `tests/`. El workflow de CI ejecuta `pytest -q`
 en cada `push` y `pull_request`.
 
+## 8.5 Contrato de API
+
+`docs/api/openapi.yaml` es la fuente única de verdad para la forma de la
+API pública — se escribe antes que el código lo implemente (API-first) y
+se versiona junto con él. `tests/test_contrato.py` valida en cada corrida
+de `pytest` que las respuestas reales de la API cumplen ese contrato; un
+cambio incompatible (campo eliminado, renombrado o de tipo distinto) hace
+fallar esa prueba antes de llegar a un consumidor. La estrategia de
+integración síncrona/asíncrona que acompaña al contrato está en
+[`../adr/0004-integracion-sincrona-y-asincrona.md`](../adr/0004-integracion-sincrona-y-asincrona.md).
+
 # 9. Decisiones arquitectónicas
 
 - [ADR 0001 — Estilo arquitectónico](../adr/0001-estilo-arquitectonico.md):
   monolito modular.
+- [ADR 0002 — Búsqueda combinada en una sola solicitud](../adr/0002-usabilidad-busqueda-en-una-solicitud.md).
+- [ADR 0003 — Separar el contexto de Calificaciones del de Documentos](../adr/0003-separacion-contexto-calificaciones.md)
+  (propuesto, pendiente de implementar).
+- [ADR 0004 — Estrategia de integración síncrona y asíncrona](../adr/0004-integracion-sincrona-y-asincrona.md).
 
 # 10. Requisitos de calidad
 
@@ -237,8 +338,10 @@ el ADR 0001.
 | Acoplamiento entre módulos | Alto | Revisar dependencias y usar interfaces de servicio |
 | SQLite no escala indefinidamente | Medio | Sustituir persistencia cuando el volumen lo justifique |
 | Sin autenticación completa en este corte | Alto | Implementar control de acceso en siguientes incrementos |
-| Sin almacenamiento real de archivos | Medio | Integrar servicio de archivos en un corte posterior |
+| Sin almacenamiento real de archivos | Medio | Integrar servicio de archivos en un corte posterior, síncrono (ADR 0004) |
 | Caché aún no implementada | Medio | Medir antes de introducirla y documentar la política de invalidación |
+| Sin cola/outbox para notificaciones todavía | Medio | Implementar antes de construir el flujo de correo (ADR 0004) |
+| Contrato de API sin generación automática de cliente/stub | Bajo | Evaluar generador (openapi-generator u otro) en un corte posterior |
 
 # 12. Glosario
 
@@ -252,3 +355,7 @@ el ADR 0001.
 | Corte vertical | Funcionalidad que atraviesa varias capas hasta producir un resultado observable |
 | Documento | Material académico publicado en ShareU |
 | Filtro | Criterio utilizado para reducir resultados de búsqueda |
+| Contrato de API | Especificación ejecutable (OpenAPI/AsyncAPI) de una interfaz, fuente única de verdad entre proveedor y consumidor |
+| Prueba de contrato | Prueba automatizada que verifica que una respuesta real cumple el contrato publicado |
+| Acoplamiento temporal | Grado en que el emisor de una integración debe esperar al receptor para considerar su propia operación completa |
+
