@@ -8,7 +8,7 @@ info:
     endpoints (usuarios, calificaciones, administración) se agregarán a
     este contrato cuando su lógica de negocio se implemente; hasta entonces
     solo se contratan sus rutas `/ping`.
-  version: 1.0.0
+  version: 1.1.0
   contact:
     name: Equipo ShareU
     url: https://github.com/ISCOUTB/AS_202620_ShareU
@@ -105,6 +105,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EstadoModulo"
+
+  /administracion/metricas:
+    get:
+      tags: [administracion]
+      operationId: obtenerMetricas
+      summary: Métrica consultable ligada al escenario de usabilidad (ficha S8).
+      responses:
+        "200":
+          description: Estado actual de la métrica de búsquedas.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Metricas"
 
   /busqueda/documentos:
     get:
@@ -234,6 +247,21 @@ components:
           items:
             $ref: "#/components/schemas/DocumentoResumen"
 
+    Metricas:
+      type: object
+      description: Métrica del escenario de usabilidad (ficha S8).
+      required:
+        - escenario
+        - total_busquedas
+        - busquedas_sin_resultados
+        - tasa_busquedas_sin_resultados
+      additionalProperties: false
+      properties:
+        escenario: { type: string }
+        total_busquedas: { type: integer, minimum: 0 }
+        busquedas_sin_resultados: { type: integer, minimum: 0 }
+        tasa_busquedas_sin_resultados: { type: number, minimum: 0, maximum: 1 }
+
     ErrorValidacion:
       type: object
       required: [detail]
@@ -247,3 +275,5 @@ components:
 # 1.0.0 (2026-09, Semana 7): primera versión publicada. Cubre /health,
 #   /ping de los cinco módulos y GET /busqueda/documentos tal como está
 #   implementado desde el corte vertical de la semana 4.
+# 1.1.0 (2026-09, Semana 7-8): se agrega GET /administracion/metricas
+#   (métrica de usabilidad, ficha S8) y su esquema Metricas.

@@ -1,9 +1,9 @@
-"""Lógica de búsqueda del módulo busqueda."""
 from __future__ import annotations
 
 from typing import Any, Callable
 
 from app.documentos.service import obtener_documentos
+from app.administracion.metricas import registrar_busqueda
 
 _Filtro = Callable[[dict[str, Any]], bool]
 
@@ -42,7 +42,6 @@ def _construir_filtros(
     palabra_clave: str | None,
     min_calificacion: float | None,
 ) -> list[_Filtro]:
-    """Traduce cada criterio opcional en un predicado independiente."""
     return [
         _coincide_campo("universidad", universidad),
         _coincide_campo("carrera", carrera),
@@ -62,11 +61,6 @@ def buscar_documentos(
     palabra_clave: str | None = None,
     min_calificacion: float | None = None,
 ) -> list[dict[str, Any]]:
-    """Filtra y ordena documentos usando los criterios disponibles.
-
-    Todos los filtros son opcionales. Los resultados se ordenan por
-    calificación descendente para priorizar material mejor valorado.
-    """
     filtros = _construir_filtros(
         universidad=universidad,
         carrera=carrera,
@@ -85,4 +79,6 @@ def buscar_documentos(
     resultados.sort(key=lambda documento: (-documento["calificacion"], documento["titulo"]))
     for documento in resultados:
         documento.pop("palabras_clave", None)
+
+    registrar_busqueda(total_resultados=len(resultados))
     return resultados

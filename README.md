@@ -28,8 +28,10 @@ y se relaciona con el escenario de usabilidad de
 
 ## Requisitos
 
-- Python 3.10 o superior.
-- `pip`.
+- Python 3.10 o superior y `pip` (backend).
+- Node.js 18 o superior (frontend).
+- Opcional: Docker, para levantar el backend sin instalar Python.
+
 
 ## Instalación
 
@@ -69,6 +71,57 @@ uvicorn app.main:app --reload
 La API queda disponible en `http://127.0.0.1:8000`.
 
 Documentación interactiva: `http://127.0.0.1:8000/docs`.
+
+## Sistema desplegado
+
+| Pieza | URL |
+|---|---|
+| Frontend (Next.js, Vercel) | <URL Vercel> |
+| Backend (FastAPI, Render) | <URL Render> |
+| Documentación de la API | <URL Render>/docs |
+| Verificación de salud | <URL Render>/health |
+
+El backend gratuito "duerme" tras un periodo sin tráfico, así que la primera
+solicitud puede tardar unos segundos. Los datos vuelven a los de ejemplo en
+cada reinicio (ver `docs/adr/0006-plataforma-backend-despliegue.md`).
+
+## Ejecución con Docker
+
+```bash
+docker compose up --build
+```
+
+El backend queda en `http://127.0.0.1:8000`.
+
+## Ejecución del frontend
+
+```bash
+cd frontend
+cp .env.example .env.local
+npm install
+npm run dev
+```
+
+El frontend queda en `http://localhost:3000` y consume el backend indicado en
+`NEXT_PUBLIC_API_URL`.
+
+## Variables de entorno
+
+Se declaran en `.env.example` (backend) y `frontend/.env.example`. Los valores
+reales se configuran en el panel de Render, en Vercel y en GitHub Actions
+Secrets (`SONAR_TOKEN`); nunca se suben al repositorio.
+
+## Observabilidad
+
+- `GET /health`: estado del servicio.
+- Logs en JSON por solicitud (`request_id`, `method`, `path`, `status_code`, `duration_ms`).
+- `GET /administracion/metricas`: total de búsquedas y tasa de búsquedas sin
+  resultados, ligada al escenario de usabilidad de `docs/aspectos/aspectos.md`.
+
+## Contrato de la API
+
+`docs/api/openapi.yaml` es la fuente de verdad; `tests/test_contrato.py`
+falla si una respuesta real deja de cumplirlo.
 
 ## Corte vertical de búsqueda
 
@@ -143,3 +196,6 @@ pruebas automáticamente en cada `push` y `pull_request`.
 - [ADR 0001](docs/adr/0001-estilo-arquitectonico.md)
 - [Aspectos de calidad](docs/aspectos/aspectos.md)
 - [Uso de IA](docs/ia/ia.md)
+- [ADR 0002](docs/adr/0002-usabilidad-busqueda-en-una-solicitud.md), [0003](docs/adr/0003-separacion-contexto-calificaciones.md), [0004](docs/adr/0004-integracion-sincrona-y-asincrona.md), [0005](docs/adr/0005-migracion-frontend-nextjs.md), [0006](docs/adr/0006-plataforma-backend-despliegue.md), [0007](docs/adr/0007-plataforma-frontend-despliegue.md)
+- [Contrato OpenAPI](docs/api/openapi.yaml)
+- [Estimación de costo](docs/costos/estimacion-costo.md)

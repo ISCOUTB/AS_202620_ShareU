@@ -1,0 +1,13 @@
+:root { --pizarra:#1F3B2E; --tiza:#F1EFE4; --acento:#E8B94E; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--pizarra); color:var(--tiza); font-family: system-ui, sans-serif; }
+.hero { padding:48px 40px 24px; max-width:900px; }
+.hero h1 { font-family: Georgia, serif; font-size:2.2rem; margin:0 0 24px; }
+.buscador { display:flex; flex-wrap:wrap; gap:10px; }
+.buscador input { flex:1 1 160px; padding:8px 10px; border-radius:3px; border:1px solid #ffffff33; background:#274734; color:var(--tiza); }
+.buscador button { background:var(--acento); color:var(--pizarra); border:none; font-weight:600; padding:8px 20px; border-radius:3px; cursor:pointer; }
+main { background:var(--tiza); color:var(--pizarra); border-radius:18px 18px 0 0; padding:28px 40px 60px; min-height:50vh; }
+.fichas { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+.ficha { background:#fff; padding:16px 18px; display:flex; flex-direction:column; gap:6px; border:1px solid #d8d4c4; }
+.tipo { align-self:flex-start; background:#1f3b2e14; font-size:.72rem; padding:3px 8px; border-radius:3px; }
+.vacio { color:#6b6a5e; font-style:italic; }

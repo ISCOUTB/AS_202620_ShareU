@@ -28,18 +28,26 @@ El escenario de usabilidad completo está en
 # 2. Restricciones arquitectónicas
 
 - El backend se implementa inicialmente con Python y FastAPI.
+- El frontend se implementa con Next.js (ver ADR 0005), cumpliendo la
+  restricción de stack del curso (Backend: NestJS/FastAPI — Frontend:
+  Flutter/Next.js).
 - El proyecto se entrega incrementalmente.
-- El despliegue inicial es un único servicio.
+- El despliegue inicial es de dos servicios independientes: backend
+  (Render) y frontend (Vercel) — ver ADR 0006 y ADR 0007.
 - Los cinco dominios deben conservar fronteras explícitas.
 - La persistencia del corte vertical utiliza SQLite y la biblioteca estándar
   de Python para mantener el alcance pequeño.
-- Las pruebas se ejecutan con `pytest`.
+- Las pruebas se ejecutan con `pytest`, incluida una prueba de contrato
+  sobre `docs/api/openapi.yaml` (ver ADR y ficha S7).
 - La integración continua se realiza con GitHub Actions.
 - Las decisiones arquitectónicas se registran mediante ADR.
 - Toda API pública se especifica primero como contrato ejecutable
   (OpenAPI/AsyncAPI) versionado en `docs/api/`, y ese contrato se verifica
-  con una prueba de contrato en el pipeline (ver ADR pendiente de esta
-  semana y `docs/api/openapi.yaml`).
+  con una prueba de contrato en el pipeline.
+- **Restricción de costo:** el despliegue debe mantenerse en **USD 0/mes**
+  y **sin tarjeta de crédito** en ningún proveedor, mientras el proyecto
+  sea un ejercicio académico (ver `docs/costos/estimacion-costo.md`). Esta
+  restricción es la que descarta alternativas como Railway en ADR 0006.
 
 # 3. Contexto y alcance
 
@@ -257,23 +265,64 @@ contratar).
 
 # 7. Vista de despliegue
 
-La primera versión se ejecuta como un único servicio:
+## 7.1 Entorno de producción (dos piezas independientes)
+
+| Caja | Dónde se ejecuta | Tecnología | Expuesto en |
+|---|---|---|---|
+| Backend ShareU | Render, plan Free, contenedor Docker (`Dockerfile`) | Python 3.11 + FastAPI + Uvicorn | `https://shareu-backend.onrender.com` (URL real: ver README) |
+| Frontend ShareU | Vercel, plan Hobby | Next.js (Node.js, build estático + SSR mínimo) | `https://shareu-frontend.vercel.app` (URL real: ver README) |
+| Base de datos | Dentro del contenedor del backend (mismo proceso/filesystem) | SQLite, sin disco persistente en el plan Free | No expuesta directamente; solo accesible vía la API del backend |
+| CI/CD | GitHub Actions | `pytest` + análisis SonarCloud | `.github/workflows/tests.yml` |
 
 ```text
-+-----------------------------+
-| Entorno de ejecución        |
-|                             |
-|  Uvicorn                    |
-|    |                        |
-|    +-- FastAPI / ShareU     |
-|           |                 |
-|           +-- SQLite        |
-+-----------------------------+
+GitHub (push a master)
+    |
+    +--> GitHub Actions: pytest + prueba de contrato + SonarCloud
+    |
+    +--> Render (Blueprint render.yaml): build de Dockerfile --> backend en producción
+    |
+    +--> Vercel (integración Git nativa): build de /frontend --> frontend en producción
+
+Navegador del estudiante
+    |
+    v
+Frontend (Vercel, Next.js)
+    |  fetch a NEXT_PUBLIC_API_URL
+    v
+Backend (Render, FastAPI)
+    |
+    v
+SQLite (filesystem del contenedor, no persistente en plan Free)
 ```
 
-En una evolución posterior, el almacenamiento de archivos y el correo podrán
-ser servicios externos. Si el rendimiento de un dominio lo exige, el ADR 0001
-permite evaluar la extracción del módulo correspondiente.
+## 7.2 Justificación de plataforma
+
+Cada pieza de infraestructura tiene su propio ADR con alternativa
+descartada, según pide la ficha S8:
+
+- Backend → [`docs/adr/0006-plataforma-backend-despliegue.md`](../adr/0006-plataforma-backend-despliegue.md)
+- Frontend → [`docs/adr/0007-plataforma-frontend-despliegue.md`](../adr/0007-plataforma-frontend-despliegue.md)
+- Migración de stack de frontend → [`docs/adr/0005-migracion-frontend-nextjs.md`](../adr/0005-migracion-frontend-nextjs.md)
+
+## 7.3 Observabilidad
+
+- **Health check:** `GET /health` en el backend, usado tanto por Docker
+  (`HEALTHCHECK`) como por Render para reiniciar el servicio si deja de
+  responder.
+- **Logs estructurados:** cada solicitud HTTP se registra como una línea
+  JSON (`app/main.py`, middleware `registrar_solicitud`) con
+  `request_id`, `method`, `path`, `status_code` y `duration_ms`.
+- **Métrica ligada a un escenario:** `GET /administracion/metricas`
+  expone `total_busquedas` y `tasa_busquedas_sin_resultados`, ligada al
+  escenario de usabilidad de `docs/aspectos/aspectos.md` (una búsqueda sin
+  resultados obliga a una interacción adicional, erosionando el
+  presupuesto de "3 interacciones o menos").
+
+## 7.4 Costo
+
+Ver [`docs/costos/estimacion-costo.md`](../costos/estimacion-costo.md):
+estimado en USD 0/mes bajo el volumen supuesto, sin tarjeta de crédito en
+ningún proveedor.
 
 # 8. Conceptos transversales
 
