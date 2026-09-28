@@ -20,7 +20,7 @@ jobs:
           cache: "pip"
 
       - name: Instalar dependencias
-        run: python -m pip install --require-hashes -r requirements.txt
+        run: python -m pip install --only-binary :all: --require-hashes -r requirements.txt
 
       - name: Ejecutar pruebas (incluye prueba de contrato)
         run: PYTHONPATH=. pytest -q --junitxml=pytest-report.xml
