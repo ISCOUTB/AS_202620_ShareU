@@ -6,7 +6,9 @@ export const metadata = {
   description: "Apuntes, talleres y parciales por universidad, carrera y materia.",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="es">
       <body>{children}</body>
