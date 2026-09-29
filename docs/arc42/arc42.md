@@ -119,6 +119,7 @@ app.main
   +--> usuarios.router
   +--> documentos.router --> documentos.service --> documentos.repository --> SQLite
   +--> busqueda.router --> busqueda.service --> documentos.service
+                                              +--> administracion.service (métrica, ADR 0008)
   +--> calificaciones.router
   +--> administracion.router
 ```
@@ -368,6 +369,8 @@ integración síncrona/asíncrona que acompaña al contrato está en
 - [ADR 0003 — Separar el contexto de Calificaciones del de Documentos](../adr/0003-separacion-contexto-calificaciones.md)
   (propuesto, pendiente de implementar).
 - [ADR 0004 — Estrategia de integración síncrona y asíncrona](../adr/0004-integracion-sincrona-y-asincrona.md).
+- [ADR 0008 — La métrica de búsquedas se consume por la interfaz de servicio de administración](../adr/0008-metrica-tras-interfaz-de-administracion.md).
+- [ADR 0009 — No incorporar un componente generativo por ahora](../adr/0009-no-incorporar-componente-generativo.md).
 
 # 10. Requisitos de calidad
 

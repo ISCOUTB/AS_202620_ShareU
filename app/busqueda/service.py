@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Callable
 
 from app.documentos.service import obtener_documentos
-from app.administracion.metricas import registrar_busqueda
+from app.administracion.service import registrar_busqueda
 
 _Filtro = Callable[[dict[str, Any]], bool]
 

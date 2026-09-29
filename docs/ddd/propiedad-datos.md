@@ -9,10 +9,11 @@ pública del módulo dueño (nunca del repositorio interno).
 | Dato / tabla | Dueño (único escritor) | Cómo escribe | Quién lee | Cómo lee | Estado |
 |---|---|---|---|---|---|
 | Tabla `documentos` (id, titulo, universidad, carrera, materia, tipo, autor, palabras_clave) | `documentos` | `documentos/repository.py` (SQLite) | `busqueda` | `documentos.service.obtener_documentos()` (interfaz pública) | ✅ Dueño único, acceso correcto por interfaz |
-| Columna `calificacion` (dentro de la tabla `documentos`) | `documentos` (por defecto, como dato semilla) | `documentos/repository.py` | `busqueda` | vía `documentos.service` | ⚠️ Dueño técnico correcto (un solo escritor), pero dueño **conceptual** equivocado: el dato pertenece al lenguaje de `calificaciones`, que no lo escribe ni lo conoce. Ver violación V1. |
+| Columna `calificacion` (dentro de la tabla `documentos`) | `documentos` (por defecto, como dato semilla) | `documentos/repository.py` | `busqueda` | vía `documentos.service` | Dueño técnico correcto (un solo escritor), pero dueño **conceptual** equivocado: el dato pertenece al lenguaje de `calificaciones`, que no lo escribe ni lo conoce. Ver violación V1. |
 | Calificaciones de estudiantes (puntaje, autor, fecha) | *No existe tabla todavía* | — | — | — | ⚠️ El módulo `calificaciones` no tiene persistencia; solo expone `/ping` |
 | Cuentas de usuario (credenciales, perfil, rol) | *No existe tabla todavía* | — | — | — | Pendiente — módulo `usuarios` solo expone `/ping` |
 | Reportes / acciones de moderación | *No existe tabla todavía* | — | — | — | Pendiente — módulo `administracion` solo expone `/ping` |
+| Contadores de métricas de búsqueda (total, sin resultados) | `administracion` | `administracion/metricas.py` (memoria) | `busqueda` (registra), `GET /administracion/metricas` (consulta) | `administracion.service` (interfaz pública, ADR 0008) | ✅ Dueño único; el acceso pasa por la interfaz |
 | Resultados de búsqueda | Ninguno (no persiste) | n/a | Frontend (`app/frontend/script.js`) | `GET /busqueda/documentos` | ✅ Correcto: búsqueda es una proyección de solo lectura, no debe tener tabla propia |
 
 ## Regla de escritura para lo que falta por implementar
@@ -32,9 +33,10 @@ fija de una vez la propiedad esperada:
 Se revisó cada `router.py`/`service.py`/`repository.py` del repositorio
 buscando:
 
-1. Imports que crucen de un módulo al `repository.py` de otro (ninguno
-   encontrado — la única dependencia entre módulos es
-   `busqueda.service` → `documentos.service`, que es la interfaz pública).
+1. Imports que crucen de un módulo al `repository.py` de otro (las únicas
+   dependencias entre módulos son `busqueda.service` → `documentos.service` y
+   `busqueda.service` → `administracion.service`, ambas por interfaz pública;
+   `tests/test_fronteras.py` lo verifica en cada corrida).
 2. Columnas de una tabla que representen conceptos de otro dominio
    (encontrado: `calificacion` dentro de `documentos`).
 
