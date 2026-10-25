@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { buscarDocumentos, Documento, Filtros } from "@/lib/api";
 
 export default function Home() {
@@ -8,17 +8,22 @@ export default function Home() {
   const [resultados, setResultados] = useState<Documento[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
+  // Número de la última búsqueda lanzada: una respuesta anterior (tardía o repetida) no pisa a la última.
+  const ultimaBusqueda = useRef(0);
 
   async function buscar(f: Filtros) {
+    const id = ++ultimaBusqueda.current;
     setCargando(true);
     setError(null);
     try {
       const data = await buscarDocumentos(f);
-      setResultados(data.resultados);
+      if (id === ultimaBusqueda.current) setResultados(data.resultados);
     } catch {
-      setError("No se pudo conectar con el backend.");
+      if (id === ultimaBusqueda.current) {
+        setError("No se pudo conectar con el backend o tardó demasiado. Intenta de nuevo.");
+      }
     } finally {
-      setCargando(false);
+      if (id === ultimaBusqueda.current) setCargando(false);
     }
   }
 

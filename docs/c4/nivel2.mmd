@@ -9,9 +9,10 @@ C4Container
     Person(admin_persona, "Administrador", "Gestiona usuarios, documentos y reportes")
 
     System_Boundary(shareu, "ShareU") {
-        Container(web, "Aplicación web", "Next.js (React)", "Interfaz de estudiantes y administradores")
-        Container(api, "API backend", "Python + FastAPI", "Expone la API y compone los módulos del monolito")
-        ContainerDb(db, "Base de datos", "SQLite / SQL", "Persiste metadatos de documentos en el corte vertical")
+        Container(web, "Aplicación web", "Next.js (React) en Vercel", "Interfaz de estudiantes y administradores")
+        Container(api, "API backend", "Python + FastAPI en Render", "Expone la API y compone los módulos del monolito")
+        ContainerDb(db, "Base de datos", "Firestore (Firebase, plan Spark), servicio externo", "Persiste metadatos de documentos; futuro: calificaciones, usuarios, reportes")
+        ContainerQueue(outbox, "Outbox de notificaciones", "Colección en Firestore (planificado, ADR 0004)", "Eventos de correo pendientes; entrega al menos una vez con reintentos")
         Container(storage, "Almacenamiento de archivos", "Servicio externo", "Guarda archivos académicos")
         Container(mail, "Servicio de correo", "SMTP/API", "Envía notificaciones")
     }
@@ -26,13 +27,14 @@ C4Container
 
     Rel(estudiante, web, "Utiliza", "HTTPS")
     Rel(admin_persona, web, "Utiliza", "HTTPS")
-    Rel(web, api, "Consume", "JSON/HTTPS")
+    Rel(web, api, "Consume (timeout 15 s, 1 reintento)", "JSON/HTTPS")
     Rel(api, usuarios, "Enruta solicitudes", "función Python, in-process")
     Rel(api, documentos, "Enruta solicitudes", "función Python, in-process")
     Rel(api, busqueda, "Enruta solicitudes", "función Python, in-process")
     Rel(api, calificaciones, "Enruta solicitudes", "función Python, in-process")
     Rel(api, administracion, "Enruta solicitudes", "función Python, in-process")
     Rel(busqueda, documentos, "Consulta mediante interfaz de servicio", "función Python, in-process")
-    Rel(documentos, db, "Lee y escribe", "SQL")
+    Rel(documentos, db, "Lee y escribe (firebase-admin, ADR 0012)", "gRPC/HTTPS")
     Rel(api, storage, "Guarda/recupera archivos", "REST/HTTPS, síncrono — ver ADR 0004")
-    Rel(api, mail, "Envía notificaciones", "SMTP/API, asíncrono vía outbox — ver ADR 0004")
+    Rel(api, outbox, "Registra el evento de notificación", "Escritura en Firestore — ver ADR 0004")
+    Rel(outbox, mail, "Entrega asíncrona con reintentos", "SMTP/API")
