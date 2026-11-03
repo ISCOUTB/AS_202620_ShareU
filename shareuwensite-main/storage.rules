@@ -1,0 +1,16 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /documents/{uid}/{fileName} {
+      allow read: if request.auth != null &&
+        (request.auth.uid == uid ||
+         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin');
+      allow create: if request.auth != null && request.auth.uid == uid &&
+        request.resource.size < 20 * 1024 * 1024 &&
+        request.resource.contentType.matches('application/pdf|image/.*|application/msword|application/vnd.openxmlformats-officedocument.wordprocessingml.document|application/vnd.openxmlformats-officedocument.presentationml.presentation|application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|text/plain');
+      allow update: if request.auth != null && request.auth.uid == uid &&
+        request.resource.size < 20 * 1024 * 1024;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Panel | shareU</title><link rel="stylesheet" href="style.css">
+<style>
+.contenedor{max-width:1000px;margin:auto;padding:32px 24px}.tarjeta{background:var(--pizarra-suave);padding:22px;border:1px solid #ffffff20;border-radius:10px;margin:18px 0}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form-grid input,.form-grid select,.form-grid textarea{width:100%;padding:11px;border:1px solid #ffffff35;border-radius:5px;background:#193126;color:var(--tiza);font:inherit}.form-grid textarea,.form-grid button{grid-column:1/-1}.form-grid textarea{min-height:160px}.form-grid button{padding:12px;background:var(--acento);border:0;border-radius:5px;font-weight:700;cursor:pointer}.documento{padding:16px 0;border-bottom:1px solid #ffffff25;display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}.documento button{margin:4px;padding:8px 12px;cursor:pointer}.estado{color:var(--acento);min-height:1.4em}.etiqueta{font-size:.8rem;padding:4px 8px;border:1px solid #ffffff40;border-radius:4px}.contenido{white-space:pre-wrap;overflow-wrap:anywhere;max-width:700px}.nota{opacity:.85}@media(max-width:650px){.form-grid{grid-template-columns:1fr}.form-grid textarea,.form-grid button{grid-column:auto}}
+
+/* Contraste y legibilidad para los paneles de usuario y administración */
+body.panel-app { background: var(--pizarra); color: var(--tiza); }
+.panel-app main.contenedor {
+  max-width: 1100px; margin: 28px auto; padding: 32px;
+  background: #f7f5ec; color: #20392d; border-radius: 16px;
+  min-height: 60vh; box-shadow: 0 12px 35px #10251b55;
+}
+.panel-app h1, .panel-app h2, .panel-app h3 { color: #20392d; }
+.panel-app #descripcionPanel, .panel-app .nota { color: #46584c; opacity: 1; }
+.panel-app .tarjeta {
+  background: #fffdf6; color: #20392d; border: 1px solid #d7d3c4;
+  border-radius: 14px; box-shadow: 0 4px 14px #20392d0d;
+}
+.panel-app .tarjeta p, .panel-app .tarjeta small,
+.panel-app .tarjeta strong, .panel-app .documento { color: #20392d; }
+.panel-app .form-grid input, .panel-app .form-grid select,
+.panel-app .form-grid textarea {
+  background: #ffffff; color: #1e3027; border: 1px solid #9aa99b;
+  border-radius: 8px; min-height: 44px;
+}
+.panel-app .form-grid textarea { min-height: 145px; }
+.panel-app .form-grid input::placeholder,
+.panel-app .form-grid textarea::placeholder { color: #5d6c61; opacity: 1; }
+.panel-app .form-grid select option { background: #ffffff; color: #1e3027; }
+.panel-app .form-grid input:focus, .panel-app .form-grid select:focus,
+.panel-app .form-grid textarea:focus {
+  outline: 3px solid #e8b94e88; border-color: #9a6b00;
+}
+.panel-app .form-grid button, .panel-app .documento button {
+  background: #dcae36; color: #1f3328; border: 1px solid #bd8b16;
+  border-radius: 8px; font-weight: 700; min-height: 42px;
+}
+.panel-app .form-grid button:hover, .panel-app .documento button:hover {
+  background: #f0c95f;
+}
+.panel-app button:disabled { opacity: .6; cursor: wait; }
+.panel-app .documento { border-bottom: 1px solid #d5d2c6; padding: 18px 0; }
+.panel-app .etiqueta { color: #243b2e; background: #e8efdf; border-color: #8ba18d; }
+.panel-app .estado { color: #245b37; font-weight: 600; }
+.panel-app .topbar { color: var(--tiza); }
+.panel-app .topbar #identidad { color: #f1efe4; }
+.panel-app .modo-btn { color: #f1efe4; border-color: #c9cfc4; }
+.panel-app .modo-btn:hover { color: #f0c95f; border-color: #f0c95f; }
+@media(max-width:650px) {
+  .panel-app main.contenedor { margin: 14px 10px; padding: 20px 16px; }
+  .panel-app .topbar { gap: 12px; padding: 16px; }
+  .panel-app #identidad { overflow-wrap: anywhere; }
+}
+
+</style></head>
+<body class="panel-app">
+<header class="topbar"><a class="brand" href="index.html" style="color:inherit;text-decoration:none">shareU · Panel</a><span id="identidad"></span><button id="salir" class="modo-btn">Cerrar sesión</button></header>
+<main class="contenedor"><h1 id="tituloPanel">Panel de usuario</h1><p id="descripcionPanel">Comparte apuntes, ejercicios y material académico escribiendo el contenido directamente. ShareU no sube archivos.</p>
+<section class="tarjeta" id="seccionPublicar"><h2>Publicar material académico</h2><form id="publicacion" class="form-grid">
+<input name="title" placeholder="Título" maxlength="150" required><input name="subject" placeholder="Materia" maxlength="120" required>
+<input name="university" placeholder="Universidad" maxlength="120" required><input name="career" placeholder="Carrera" maxlength="120" required>
+<select name="type" required><option value="">Tipo de publicación</option><option>Apuntes</option><option>Taller</option><option>Parcial</option><option>Ejercicios</option><option>Guía</option><option>Resumen</option><option>Otro</option></select>
+<textarea name="content" placeholder="Escribe aquí el contenido académico (máximo 20.000 caracteres)" maxlength="20000" required></textarea>
+<textarea name="description" placeholder="Descripción breve (opcional)" maxlength="1000"></textarea><button id="publicarBtn">Enviar para revisión</button></form><p class="estado" id="estadoPublicacion" role="status" aria-live="polite"></p></section>
+<section class="tarjeta" id="seccionMias"><h2>Mis publicaciones</h2><div id="misDocs">Cargando…</div></section>
+<section class="tarjeta" id="admin" hidden><h2>Administración · pendientes</h2><p class="nota">Solo el rol admin puede aprobar o rechazar publicaciones. Asígnalo desde la consola de Firebase.</p><div id="pendientes"></div></section>
+</main>
+<script type="module">
+import {auth,isFirebaseConfigured,onAuthStateChanged,signOut,getUserProfile,publishPost,listOwnDocuments,listPendingDocuments,moderateDocument} from './firebase-service.js';
+const $=s=>document.querySelector(s);let currentUser=null,profile=null;
+$('#salir').addEventListener('click',async()=>{await signOut(auth);location.href='cuenta.html';});
+onAuthStateChanged(auth,async user=>{
+ if(!isFirebaseConfigured){$('#identidad').textContent='Firebase sin configurar';$('#misDocs').textContent='La conexión a Firebase necesita la apiKey real en firebase-config.js.';return;}
+ if(!user){location.href='cuenta.html';return;}currentUser=user;
+ try{profile=await getUserProfile(user.uid);if(!profile){$('#misDocs').textContent='No existe un perfil para esta cuenta en Firestore.';return;}const isAdmin=profile.role==='admin';$('#identidad').textContent=(user.displayName||user.email)+' · '+(isAdmin?'Administrador':'Usuario');$('#admin').hidden=!isAdmin;if(isAdmin){$('#tituloPanel').textContent='Panel administrativo';$('#descripcionPanel').textContent='Revisa las publicaciones pendientes y aprueba o rechaza el material enviado por los usuarios.';$('#seccionPublicar').hidden=true;$('#seccionMias').hidden=true;}else{$('#admin').hidden=true;}await refresh();}
+ catch(e){console.error(e);$('#misDocs').textContent='No se pudo leer el perfil. Revisa las reglas de Firestore.';}
+});
+$('#publicacion').addEventListener('submit',async e=>{
+ e.preventDefault();if(!currentUser)return;const form=e.currentTarget,data=Object.fromEntries(new FormData(form));
+ if(!data.content.trim()){ $('#estadoPublicacion').textContent='Escribe el contenido antes de publicar.';return;}
+ $('#publicarBtn').disabled=true;$('#estadoPublicacion').textContent='Enviando para revisión…';
+ try{await publishPost({...data,user:currentUser});form.reset();$('#estadoPublicacion').textContent='Publicación enviada. Aparecerá cuando un administrador la apruebe.';await refresh();}
+ catch(err){console.error('Error al publicar en ShareU:',err);const code=err?.code||'sin-codigo';const detalle=code==='permission-denied'?'Firestore rechazó la publicación por sus reglas de seguridad.':code==='unauthenticated'?'La sesión no está autenticada. Cierra sesión y vuelve a entrar.':code==='unavailable'?'Firebase no está disponible; comprueba tu conexión.':'No se pudo guardar la publicación.';$('#estadoPublicacion').textContent=detalle+' Código: '+code;}
+ finally{$('#publicarBtn').disabled=false;}
+});
+async function refresh(){const mine=await listOwnDocuments(currentUser.uid);$('#misDocs').innerHTML=mine.length?mine.map(card).join(''):'Aún no has publicado material.';if(profile?.role==='admin'){try{const pending=await listPendingDocuments();$('#pendientes').innerHTML=pending.length?pending.map(d=>card(d,true)).join(''):'No hay publicaciones pendientes.';}catch(err){console.error('No se pudieron cargar las publicaciones pendientes:',err);const code=err?.code||'sin-codigo';$('#pendientes').textContent='No se pudieron cargar las publicaciones pendientes. Error: '+code+'. Comprueba que las reglas de Firestore estén publicadas y que el documento users/'+currentUser.uid+' tenga role = admin.';}}}
+function card(d,admin=false){return '<article class="documento"><div><strong>'+esc(d.title)+'</strong><p>'+esc(d.subject)+' · '+esc(d.type)+' · <span class="etiqueta">'+esc(d.status)+'</span></p><p class="contenido">'+esc(d.content)+'</p><small>'+esc(d.university)+' · '+esc(d.career)+'</small></div><div>'+(admin?'<button data-id="'+esc(d.id)+'" data-status="approved">Aprobar</button><button data-id="'+esc(d.id)+'" data-status="rejected">Rechazar</button>':'')+'</div></article>';}
+$('#pendientes').addEventListener('click',async e=>{const b=e.target.closest('button[data-id]');if(!b)return;b.disabled=true;try{await moderateDocument(b.dataset.id,b.dataset.status);await refresh();}catch(err){console.error(err);alert('No se pudo moderar. Confirma el rol admin y las reglas de Firestore.');b.disabled=false;}});
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+</script></body></html>

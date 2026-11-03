@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cuenta | shareU</title><link rel="stylesheet" href="style.css"><style>.cuenta{max-width:560px;margin:55px auto;padding:28px;background:var(--pizarra-suave);border:1px solid #ffffff22;border-radius:12px}.cuenta form{display:grid;gap:12px}.cuenta input,.cuenta select,.cuenta textarea{width:100%;padding:12px;border-radius:5px;border:1px solid #ffffff35;background:#193126;color:var(--tiza);font:inherit}.cuenta button,.accion{padding:12px 16px;background:var(--acento);color:var(--pizarra);border:0;border-radius:5px;font-weight:700;cursor:pointer}.cuenta p{color:var(--tiza-tenue)}.cuenta a{color:var(--acento)}.fila{display:grid;grid-template-columns:1fr 1fr;gap:10px}.estado{min-height:1.5em;color:var(--acento)}@media(max-width:500px){.fila{grid-template-columns:1fr}}</style></head>
+<body><header class="topbar"><a class="brand" href="index.html" style="color:inherit;text-decoration:none">shareU</a><a href="index.html" style="margin-left:auto;color:var(--tiza)">Volver a buscar</a></header>
+<main class="cuenta"><h1>Tu cuenta de shareU</h1><p>Regístrate para compartir apuntes y documentos de tu universidad.</p>
+<form id="registro"><h2>Crear cuenta</h2><input name="name" placeholder="Nombre completo" required maxlength="100"><input name="email" type="email" placeholder="Correo electrónico" required><input name="password" type="password" placeholder="Contraseña (mínimo 6 caracteres)" required minlength="6"><div class="fila"><input name="university" placeholder="Universidad" required maxlength="120"><input name="career" placeholder="Carrera" required maxlength="120"></div><button>Registrarme</button></form>
+<hr style="margin:25px 0;border-color:#ffffff22"><form id="ingreso"><h2>Iniciar sesión</h2><input name="email" type="email" placeholder="Correo electrónico" required><input name="password" type="password" placeholder="Contraseña" required><button>Entrar</button></form><p class="estado" id="estado" role="status" aria-live="polite"></p><p>Al registrarte, tus documentos nuevos quedan pendientes de aprobación antes de ser visibles para otros usuarios.</p></main>
+<script type="module">
+const estado=document.querySelector('#estado');
+const registro=document.querySelector('#registro');
+const ingreso=document.querySelector('#ingreso');
+function mensaje(e){
+ const code=e?.code||'sin-codigo';
+ const mensajes={
+  'auth/email-already-in-use':'Ese correo ya tiene una cuenta en Authentication. Prueba iniciar sesión.',
+  'auth/invalid-credential':'Correo o contraseña incorrectos.',
+  'auth/weak-password':'Usa una contraseña de al menos 6 caracteres.',
+  'auth/invalid-email':'El correo no es válido.',
+  'auth/operation-not-allowed':'El proveedor Correo/contraseña no está activado en Firebase Authentication.',
+  'auth/unauthorized-domain':'El dominio donde abriste ShareU no está autorizado en Firebase Authentication.',
+  'auth/api-key-not-valid.-please-pass-a-valid-api-key.':'La API key configurada no es válida para este proyecto.',
+  'permission-denied':'Authentication respondió, pero Firestore rechazó el guardado del perfil. Revisa las reglas publicadas.',
+  'unavailable':'Firestore no está disponible. Comprueba la conexión e inténtalo otra vez.',
+  'failed-precondition':'Firestore necesita configuración adicional. Revisa la consola de Firebase.'
+ };
+ return (mensajes[code]||'Firebase no pudo completar la operación.')+' Código: '+code+(e?.message?' — '+e.message:'');
+}
+registro.addEventListener('submit',async e=>{
+ e.preventDefault();
+ const form=e.currentTarget, button=form.querySelector('button');
+ const data=Object.fromEntries(new FormData(form));
+ button.disabled=true;
+ estado.textContent='Conectando con Firebase y creando la cuenta…';
+ try{
+  const {isFirebaseConfigured,registerUser}=await import('./firebase-service.js');
+  if(!isFirebaseConfigured) throw new Error('firebase-config.js no tiene una configuración completa.');
+  estado.textContent='Creando usuario en Firebase Authentication…';
+  await registerUser(data);
+  estado.textContent='Cuenta y perfil creados. Abriendo el panel…';
+  location.assign('./panel.html');
+ }catch(err){
+  console.error('Error en el registro de ShareU:',err);
+  estado.textContent=mensaje(err);
+ }finally{button.disabled=false;}
+});
+ingreso.addEventListener('submit',async e=>{
+ e.preventDefault();
+ const form=e.currentTarget, button=form.querySelector('button');
+ const data=Object.fromEntries(new FormData(form));
+ button.disabled=true;
+ estado.textContent='Comprobando el acceso en Firebase…';
+ try{
+  const {isFirebaseConfigured,loginUser,getUserProfile}=await import('./firebase-service.js');
+  if(!isFirebaseConfigured) throw new Error('firebase-config.js no tiene una configuración completa.');
+  const user=await loginUser(data.email,data.password);
+  const profile=await getUserProfile(user.uid);
+  if(!profile){throw new Error('La cuenta inició sesión, pero no existe su perfil en Firestore (users/'+user.uid+').');}
+  estado.textContent=profile.role==='admin'?'Acceso de administrador correcto. Abriendo administración…':'Acceso correcto. Abriendo tu panel…';
+  location.assign(profile.role==='admin'?'./panel.html?view=admin':'./panel.html');
+ }catch(err){
+  console.error('Error al iniciar sesión en ShareU:',err);
+  estado.textContent=mensaje(err);
+ }finally{button.disabled=false;}
+});
+</script></body></html>

@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function isAdmin() {
+      return signedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid) &&
+        request.resource.data.uid == uid &&
+        request.resource.data.role == 'user';
+      allow update: if isOwner(uid) &&
+        request.resource.data.role == resource.data.role;
+      allow delete: if isAdmin();
+    }
+
+    match /documents/{documentId} {
+      // Approved metadata is public; private/pending records are restricted.
+      allow read: if resource.data.status == 'approved' ||
+        (signedIn() && (resource.data.ownerUid == request.auth.uid || isAdmin()));
+      allow create: if signedIn() &&
+        request.resource.data.ownerUid == request.auth.uid &&
+        request.resource.data.status == 'pending';
+      allow update: if isAdmin() ||
+        (signedIn() && resource.data.ownerUid == request.auth.uid &&
+          request.resource.data.ownerUid == resource.data.ownerUid &&
+          request.resource.data.status == resource.data.status);
+      allow delete: if isAdmin() ||
+        (signedIn() && resource.data.ownerUid == request.auth.uid);
+    }
+  }
+}
