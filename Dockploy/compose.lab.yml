@@ -1,0 +1,65 @@
+# deploy/compose.lab.yaml — ShareU en el servidor del laboratorio.
+#
+# Dokploy lo despliega en cada push a master con:
+#   docker compose -p <app> --env-file deploy/.env -f deploy/compose.lab.yaml up -d --build
+# Las rutas relativas (build.context) se resuelven desde deploy/, por eso se usa "../".
+#
+# Reglas del laboratorio (docs/politicas-uso.md): sin "ports:", sin bind mounts, sin container_name,
+# límites en cada servicio (total del equipo <= 1 GB) y secretos solo en Dokploy → Environment.
+#
+# Variables que deben existir en Dokploy → Environment:
+#   FIREBASE_CREDENTIALS_JSON   JSON de la cuenta de servicio de Firebase (una sola línea)
+#
+# Dominios (Dokploy → Domains), ambos con HTTPS:
+#   shareu.iscoutb.dev       → servicio web, puerto 3000
+#   api-shareu.iscoutb.dev   → servicio api, puerto 8000
+#
+# La base de datos es Firestore (externa): no hay contenedor de base de datos.
+ 
+services:
+  api:
+    build:
+      context: ..                    # raíz del repositorio (requirements.txt y app/)
+      dockerfile: deploy/Dockerfile.api
+    restart: unless-stopped
+    environment:
+      FIREBASE_CREDENTIALS_JSON: ${FIREBASE_CREDENTIALS_JSON}
+      # Origen permitido por CORS: el dominio público del frontend.
+      SHAREU_FRONTEND_ORIGIN: https://shareu.iscoutb.dev
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=4)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+ 
+  web:
+    build:
+      context: ../app/frontend
+      dockerfile: ../../deploy/Dockerfile.web
+      args:
+        NEXT_PUBLIC_API_URL: https://api-shareu.iscoutb.dev
+    restart: unless-stopped
+    expose:
+      - "3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 192M
