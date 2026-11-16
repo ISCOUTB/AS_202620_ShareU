@@ -1,0 +1,63 @@
+{
+  "etiqueta": "local-asgi",
+  "fecha": "2026-11-16T22:52:59.302346+00:00",
+  "entorno": "asgi-en-proceso (Firestore falso, sin red)",
+  "cache": "encendida (TTL 300 s, invalidada por repetición)",
+  "commit": "local",
+  "maquina": {
+    "python": "3.12.16",
+    "sistema": "Windows-11-10.0.26220-SP0",
+    "procesadores": 16
+  },
+  "carga": {
+    "peticiones_por_repeticion": 100,
+    "repeticiones": 3,
+    "concurrencia": 10,
+    "calentamiento": 20,
+    "endpoint": "GET /busqueda/documentos?materia=Programación"
+  },
+  "resultado": {
+    "peticiones_totales": 300,
+    "errores": 0,
+    "tasa_error": 0.0,
+    "p50_ms": 52.17,
+    "p95_ms": 67.54,
+    "p99_ms": 79.5,
+    "media_ms": 51.49,
+    "throughput_rps": 188.02,
+    "lecturas_firestore": 21,
+    "lecturas_por_busqueda": 0.07
+  },
+  "repeticiones_detalle": [
+    {
+      "repeticion": 1,
+      "p50_ms": 47.69,
+      "p95_ms": 67.54,
+      "p99_ms": 76.56,
+      "errores": 0,
+      "lecturas_firestore": 1
+    },
+    {
+      "repeticion": 2,
+      "p50_ms": 55.86,
+      "p95_ms": 68.04,
+      "p99_ms": 84.15,
+      "errores": 0,
+      "lecturas_firestore": 10
+    },
+    {
+      "repeticion": 3,
+      "p50_ms": 51.65,
+      "p95_ms": 64.29,
+      "p99_ms": 77.01,
+      "errores": 0,
+      "lecturas_firestore": 10
+    }
+  ],
+  "umbral": {
+    "p95_ms": 500.0,
+    "tasa_error": 0.01,
+    "lecturas_por_busqueda_con_cache": 0.1
+  },
+  "conclusion": "cumple"
+}

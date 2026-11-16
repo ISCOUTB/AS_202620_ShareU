@@ -8,13 +8,17 @@ info:
     endpoints (usuarios, calificaciones, administración) se agregarán a
     este contrato cuando su lógica de negocio se implemente; hasta entonces
     solo se contratan sus rutas `/ping`.
-  version: 1.1.0
+  version: 1.3.0
   contact:
     name: Equipo ShareU
     url: https://github.com/ISCOUTB/AS_202620_ShareU
 servers:
   - url: http://127.0.0.1:8000
     description: Entorno local (uvicorn --reload)
+  - url: https://api-shareu.iscoutb.dev
+    description: >-
+      URL institucional prevista. Estado de verificación: HTTP 404 el
+      2026-11-16; no se presenta como servicio verificado.
 
 tags:
   - name: sistema
@@ -67,6 +71,72 @@ paths:
               schema:
                 $ref: "#/components/schemas/EstadoModulo"
 
+  /documentos/cache:
+    get:
+      tags: [documentos]
+      operationId: obtenerCacheDocumentos
+      summary: Estado de la caché de lectura del módulo documentos.
+      responses:
+        "200":
+          description: Contadores y TTL vigentes.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EstadisticasCache"
+
+  /documentos:
+    post:
+      tags: [documentos]
+      operationId: publicarDocumento
+      summary: Publica metadatos de un documento de forma idempotente.
+      description: >
+        Requiere `X-Admin-Token` (variable `SHAREU_ADMIN_TOKEN`). Repetir la
+        misma `Idempotency-Key` con el mismo cuerpo devuelve el documento ya
+        creado (HTTP 200) sin duplicarlo. Un cuerpo distinto con la misma
+        clave devuelve HTTP 409. Sin token configurado la escritura responde
+        HTTP 503: el endpoint nunca queda abierto por omisión.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 8 }
+          example: "publicacion-2026-11-16-0001"
+        - name: X-Admin-Token
+          in: header
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentoEntrada"
+      responses:
+        "201":
+          description: Documento creado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentoResumen"
+        "200":
+          description: Reintento idempotente; devuelve el documento existente.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentoResumen"
+        "401":
+          description: Credencial administrativa inválida.
+        "409":
+          description: La clave de idempotencia se usó con otro contenido.
+        "422":
+          description: Cuerpo o cabeceras inválidas.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorValidacion"
+        "503":
+          description: Publicación deshabilitada o persistencia no disponible.
+
   /busqueda/ping:
     get:
       tags: [busqueda]
@@ -118,6 +188,85 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Metricas"
+
+  /administracion/cache:
+    get:
+      tags: [administracion]
+      operationId: obtenerCacheAdministracion
+      summary: Estado observable de la caché de lectura (S12 / S14).
+      responses:
+        "200":
+          description: Contadores y TTL vigentes.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EstadisticasCache"
+
+  /administracion/eventos:
+    get:
+      tags: [administracion]
+      operationId: obtenerEstadisticasEventos
+      summary: Contadores del outbox de eventos (taller S12).
+      responses:
+        "200":
+          description: Garantía elegida, pendientes, procesados, reintentos y fallidos.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EstadisticasEventos"
+
+  /administracion/revision:
+    get:
+      tags: [administracion]
+      operationId: listarRevision
+      summary: Bandeja de revisión alimentada por `documento.publicado`.
+      description: >
+        Requiere la credencial administrativa porque expone material pendiente
+        y nombres de autores (ADR 0014, modelado STRIDE de S13).
+      parameters:
+        - name: X-Admin-Token
+          in: header
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Documentos pendientes de revisión.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BandejaRevision"
+        "401":
+          description: Credencial administrativa inválida.
+        "503":
+          description: Lectura deshabilitada por falta de configuración.
+
+  /administracion/revision/{id_documento}/resolver:
+    post:
+      tags: [administracion]
+      operationId: resolverRevision
+      summary: Aprueba y retira un documento de la bandeja de revisión.
+      parameters:
+        - name: id_documento
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - name: X-Admin-Token
+          in: header
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Entrada resuelta.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntradaRevision"
+        "401":
+          description: Credencial administrativa inválida.
+        "404":
+          description: El documento no está pendiente de revisión.
+        "503":
+          description: Escritura deshabilitada por falta de configuración.
 
   /busqueda/documentos:
     get:
@@ -213,9 +362,10 @@ components:
     DocumentoResumen:
       type: object
       description: >
-        Proyección de solo lectura que expone búsqueda (docs/ddd/contextos.md).
-        No es el agregado completo de `documentos`; no incluye archivo,
-        palabras clave internas ni metadatos de auditoría.
+        Proyección de solo lectura de un documento publicado (docs/ddd/contextos.md).
+        No es el agregado completo: no incluye el archivo ni metadatos de
+        auditoría (clave y hash de idempotencia). La búsqueda omite además
+        `palabras_clave`, que es un campo interno de indexación.
       required:
         - id
         - titulo
@@ -235,6 +385,50 @@ components:
         tipo: { type: string }
         autor: { type: string }
         calificacion: { type: number, format: float, minimum: 0, maximum: 5 }
+        palabras_clave: { type: string, maxLength: 400 }
+
+    DocumentoEntrada:
+      type: object
+      description: Metadatos aceptados al publicar un documento.
+      required:
+        - titulo
+        - universidad
+        - carrera
+        - materia
+        - tipo
+        - autor
+        - calificacion
+      additionalProperties: false
+      properties:
+        titulo: { type: string, minLength: 1, maxLength: 200 }
+        universidad: { type: string, minLength: 1, maxLength: 120 }
+        carrera: { type: string, minLength: 1, maxLength: 120 }
+        materia: { type: string, minLength: 1, maxLength: 120 }
+        tipo: { type: string, minLength: 1, maxLength: 60 }
+        autor: { type: string, minLength: 1, maxLength: 120 }
+        calificacion: { type: number, format: float, minimum: 0, maximum: 5 }
+        palabras_clave: { type: string, maxLength: 400, default: "" }
+
+    EstadisticasCache:
+      type: object
+      description: Estado de la caché de lectura en proceso (ADR 0013).
+      required:
+        - ttl_segundos
+        - entradas
+        - hits
+        - misses
+        - invalidaciones
+        - expira_en_segundos
+      additionalProperties: false
+      properties:
+        ttl_segundos: { type: number, minimum: 0 }
+        entradas: { type: integer, minimum: 0 }
+        hits: { type: integer, minimum: 0 }
+        misses: { type: integer, minimum: 0 }
+        invalidaciones: { type: integer, minimum: 0 }
+        expira_en_segundos:
+          type: [number, "null"]
+          minimum: 0
 
     ResultadoBusqueda:
       type: object
@@ -262,6 +456,64 @@ components:
         busquedas_sin_resultados: { type: integer, minimum: 0 }
         tasa_busquedas_sin_resultados: { type: number, minimum: 0, maximum: 1 }
 
+    EstadisticasEventos:
+      type: object
+      description: Contadores del outbox (docs/eventos/contrato-evento.md).
+      required:
+        - garantia
+        - max_intentos
+        - espera_base_segundos
+        - pendientes
+        - fallidos
+        - publicados
+        - procesados
+        - duplicados
+        - reintentos
+      additionalProperties: false
+      properties:
+        garantia: { type: string }
+        max_intentos: { type: integer, minimum: 1 }
+        espera_base_segundos: { type: number, minimum: 0 }
+        pendientes: { type: integer, minimum: 0 }
+        fallidos: { type: integer, minimum: 0 }
+        publicados: { type: integer, minimum: 0 }
+        procesados: { type: integer, minimum: 0 }
+        duplicados: { type: integer, minimum: 0 }
+        reintentos: { type: integer, minimum: 0 }
+
+    EntradaRevision:
+      type: object
+      description: Documento pendiente de revisión en administración.
+      required:
+        - id_documento
+        - titulo
+        - materia
+        - event_id
+        - correlation_id
+        - recibido_en
+        - estado
+      additionalProperties: false
+      properties:
+        id_documento: { type: integer, minimum: 1 }
+        titulo: { type: string }
+        materia: { type: string }
+        autor: { type: [string, "null"] }
+        event_id: { type: string }
+        correlation_id: { type: string }
+        recibido_en: { type: string }
+        estado: { type: string, enum: [pendiente, aprobado] }
+
+    BandejaRevision:
+      type: object
+      required: [total, documentos]
+      additionalProperties: false
+      properties:
+        total: { type: integer, minimum: 0 }
+        documentos:
+          type: array
+          items:
+            $ref: "#/components/schemas/EntradaRevision"
+
     ErrorValidacion:
       type: object
       required: [detail]
@@ -277,3 +529,12 @@ components:
 #   implementado desde el corte vertical de la semana 4.
 # 1.1.0 (2026-09, Semana 7-8): se agrega GET /administracion/metricas
 #   (métrica de usabilidad, ficha S8) y su esquema Metricas.
+# 1.2.0 (2026-11, Semanas 11-13): se documentan POST /documentos (publicación
+#   idempotente), GET /documentos/cache, GET /administracion/cache,
+#   GET /administracion/eventos, GET /administracion/revision y
+#   POST /administracion/revision/{id_documento}/resolver. Son adiciones
+#   compatibles: ninguna ruta ni esquema anterior cambia de forma.
+# 1.3.0 (2026-11, Semana 13): GET /administracion/revision pasa a exigir
+#   X-Admin-Token. Es un cambio incompatible deliberado (versión mayor de la
+#   ruta administrativa) motivado por el modelado STRIDE: la bandeja expone
+#   material pendiente y nombres de autores. El resto de rutas no cambia.

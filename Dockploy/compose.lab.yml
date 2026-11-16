@@ -1,31 +1,35 @@
-# deploy/compose.lab.yaml — ShareU en el servidor del laboratorio.
+# Dockploy/compose.lab.yml — ShareU en el servidor del laboratorio.
 #
 # Dokploy lo despliega en cada push a master con:
-#   docker compose -p <app> --env-file deploy/.env -f deploy/compose.lab.yaml up -d --build
-# Las rutas relativas (build.context) se resuelven desde deploy/, por eso se usa "../".
+#   docker compose -p <app> --env-file Dockploy/.env -f Dockploy/compose.lab.yml up -d --build
+# Las rutas relativas de `build.context` se resuelven desde esta carpeta
+# (Dockploy/), y `dockerfile` se resuelve desde el contexto de build.
 #
-# Reglas del laboratorio (docs/politicas-uso.md): sin "ports:", sin bind mounts, sin container_name,
-# límites en cada servicio (total del equipo <= 1 GB) y secretos solo en Dokploy → Environment.
+# Reglas del laboratorio: sin "ports:", sin bind mounts, sin container_name,
+# límites en cada servicio y secretos solo en Dokploy → Environment.
 #
 # Variables que deben existir en Dokploy → Environment:
 #   FIREBASE_CREDENTIALS_JSON   JSON de la cuenta de servicio de Firebase (una sola línea)
+#   SHAREU_ADMIN_TOKEN          token de escritura y de la bandeja de revisión
 #
 # Dominios (Dokploy → Domains), ambos con HTTPS:
 #   shareu.iscoutb.dev       → servicio web, puerto 3000
 #   api-shareu.iscoutb.dev   → servicio api, puerto 8000
 #
 # La base de datos es Firestore (externa): no hay contenedor de base de datos.
- 
+
 services:
   api:
     build:
       context: ..                    # raíz del repositorio (requirements.txt y app/)
-      dockerfile: deploy/Dockerfile.api
+      dockerfile: Dockploy/Dockerfile.api
     restart: unless-stopped
     environment:
       FIREBASE_CREDENTIALS_JSON: ${FIREBASE_CREDENTIALS_JSON}
+      SHAREU_ADMIN_TOKEN: ${SHAREU_ADMIN_TOKEN}
       # Origen permitido por CORS: el dominio público del frontend.
       SHAREU_FRONTEND_ORIGIN: https://shareu.iscoutb.dev
+      SHAREU_CACHE_TTL_SEGUNDOS: "60"
     expose:
       - "8000"
     healthcheck:
@@ -39,11 +43,11 @@ services:
         limits:
           cpus: "0.50"
           memory: 256M
- 
+
   web:
     build:
       context: ../app/frontend
-      dockerfile: ../../deploy/Dockerfile.web
+      dockerfile: ../../Dockploy/Dockerfile.web
       args:
         NEXT_PUBLIC_API_URL: https://api-shareu.iscoutb.dev
     restart: unless-stopped

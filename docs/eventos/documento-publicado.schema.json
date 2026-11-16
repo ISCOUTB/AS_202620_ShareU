@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shareu.iscoutb.dev/esquemas/documento-publicado-v1.json",
+  "title": "documento.publicado (versión 1)",
+  "description": "Evento emitido por el módulo documentos cuando un documento nuevo quedó persistido. Forma congelada: un cambio incompatible exige versión mayor y un evento nuevo, no reescribir este esquema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "tipo",
+    "version",
+    "ocurrido_en",
+    "correlation_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identidad del mensaje. Es la clave de deduplicación del consumidor."
+    },
+    "tipo": {
+      "const": "documento.publicado"
+    },
+    "version": {
+      "const": 1
+    },
+    "ocurrido_en": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "request_id de la solicitud que originó el evento; permite seguirlo en los logs."
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id_documento", "titulo", "materia"],
+      "properties": {
+        "id_documento": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "titulo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "materia": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "autor": {
+          "type": ["string", "null"],
+          "maxLength": 120
+        }
+      }
+    }
+  }
+}

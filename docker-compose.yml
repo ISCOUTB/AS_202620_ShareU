@@ -1,0 +1,38 @@
+# ShareU en local: API y frontend en dos contenedores.
+#
+# Uso:
+#   copy .env.example .env      (Windows)
+#   cp .env.example .env        (Linux/macOS)
+#   docker compose up --build
+#
+# La API queda en http://127.0.0.1:8000 y el frontend en http://127.0.0.1:3000.
+# La base de datos es Firestore (externa); sin credenciales, la API arranca pero
+# toda lectura/escritura devuelve 503. Para el laboratorio se usa
+# `Dockploy/compose.lab.yml` (sin puertos publicados, ver ADR 0006).
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      FIREBASE_CREDENTIALS_JSON: ${FIREBASE_CREDENTIALS_JSON:-}
+      SHAREU_ADMIN_TOKEN: ${SHAREU_ADMIN_TOKEN:-}
+      SHAREU_FRONTEND_ORIGIN: ${SHAREU_FRONTEND_ORIGIN:-http://localhost:3000,http://127.0.0.1:3000}
+      SHAREU_CACHE_TTL_SEGUNDOS: ${SHAREU_CACHE_TTL_SEGUNDOS:-60}
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: app/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://127.0.0.1:8000}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3000:3000"

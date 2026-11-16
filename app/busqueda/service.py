@@ -70,8 +70,10 @@ def buscar_documentos(
         min_calificacion=min_calificacion,
     )
 
+    # Se copia cada documento antes de recortar campos: la lista original la
+    # comparte la caché del repositorio y no debe mutarse desde búsqueda.
     resultados = [
-        documento
+        dict(documento)
         for documento in obtener_documentos()
         if all(filtro(documento) for filtro in filtros)
     ]
