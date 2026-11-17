@@ -9,6 +9,7 @@ outbox para que administración lo ponga en su bandeja de revisión.
 from __future__ import annotations
 
 import uuid
+from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Request, status
 from fastapi.responses import JSONResponse
@@ -72,8 +73,8 @@ def publicar_documento(
     payload: DocumentoEntrada,
     request: Request,
     background: BackgroundTasks,
-    idempotency_key: str = Header(alias="Idempotency-Key", min_length=8),
-    x_admin_token: str | None = Header(default=None, alias="X-Admin-Token"),
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=8)],
+    x_admin_token: Annotated[str | None, Header(alias="X-Admin-Token")] = None,
 ):
     """Publica metadatos de un documento de forma idempotente.
 

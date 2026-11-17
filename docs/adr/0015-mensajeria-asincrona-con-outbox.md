@@ -25,7 +25,7 @@ un prototipo aislado: está en `POST /documentos`.
    declarado).
 4. **Deduplicación:** `ProcesadorIdempotente` descarta por `event_id`; la bandeja además evita
    duplicar por `id_documento`. Clave: `event_id` (UUID generado por el productor).
-5. **Reintentos:** 3 intentos con espera exponencial 1 s, 2 s, 4 s
+5. **Reintentos:** 3 intentos con espera creciente 1 s y 2 s
    (`SHAREU_EVENTO_ESPERA_BASE_SEGUNDOS`); al agotarlos, el evento pasa a la cola de fallidos
    (`fallidos`, una DLQ en memoria) y se registra con `estado_evento=fallido`.
 6. **Contrato:** `docs/eventos/documento-publicado.schema.json` y

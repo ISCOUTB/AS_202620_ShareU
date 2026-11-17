@@ -9,7 +9,7 @@
 
 | Eslabón | Destino |
 |---|---|
-| Aspecto | Usabilidad, `docs/aspectos/aspectos.md` (fila nueva de S9 en la tabla de trazabilidad) |
+| Aspecto | Usabilidad, `docs/aspectos.md` (fila nueva de S9 en la tabla de trazabilidad) |
 | Decisión del equipo | [ADR 0008](../adr/0008-metrica-tras-interfaz-de-administracion.md) (alternativas A a D argumentadas con costo USD 0, sin disco persistente y ADR 0001) |
 | Código | `app/administracion/service.py`, `app/busqueda/service.py` |
 | Pruebas | `tests/test_metricas.py`, `tests/test_fronteras.py`, `tests/test_escenario_usabilidad.py` |
@@ -25,7 +25,8 @@ Cada defecto se introdujo a propósito y luego se revirtió (`git checkout`).
 | `metricas.py`: `if total_resultados == 0` cambiado a `!= 0` | `test_metricas.py`: 2 fallos (`test_busqueda_con_resultados_no_cuenta_como_sin_resultados` y `test_busqueda_sin_resultados_se_cuenta`) |
 | Datos de ejemplo con materia y tipo repetidos | `test_escenario_usabilidad.py`: `assert 6 <= 3` |
 
-Estado final: `pytest -q` → 12 passed.
+Estado final de S9: `pytest -q` → 12 passed. **Actualización (noviembre de 2026):** la suite completa
+tiene **77 pruebas en verde**; el número histórico se conserva como registro del corte.
 
 ## 3. Medición del escenario
 
@@ -57,8 +58,8 @@ Barrido de imports: `git grep -nE '^from app\.' HEAD -- app`.
 |---|---|---|---|
 | E1 | `busqueda` importaba un archivo interno de `administracion` | `app/busqueda/service.py` L6 | Fachada `administracion/service.py` + `test_fronteras.py` (ADR 0008) |
 | E2 | `propiedad-datos.md` decía que el único cruce era `busqueda -> documentos.service` | `docs/ddd/propiedad-datos.md` | Actualizado |
-| E3 | README y arc42 citan archivos que no están en el repositorio: `tests/test_contrato.py`, `Dockerfile`, `render.yaml`, ADR 0005 a 0007 | README, `docs/arc42/arc42.md` §2, §7, §8.5 | **Pendiente:** subir los archivos o quitar la referencia |
-| E4 | Marcadores sin resolver en `ia.md` (`<URL Render>`, `<URL Vercel>`, `<integrante>`, `<URL del run en Actions>`) y en README | `docs/ia/ia.md` filas 7 y 8, README | **Pendiente:** completar |
+| E3 | README y arc42 citaban archivos que no estaban en el repositorio: `tests/test_contrato.py`, `Dockerfile`, ADR 0005 a 0007 | README, arc42 §2, §7, §8.5 | **Resuelto en noviembre de 2026:** existen `Dockerfile`, `app/frontend/Dockerfile`, `Dockploy/compose.lab.yml`, `tests/test_contrato.py` y los ADR 0005–0007; la plataforma vigente es Dockploy, no Render |
+| E4 | Marcadores sin resolver en `ia.md` (`<URL Render>`, `<URL Vercel>`, `<integrante>`, `<URL del run en Actions>`) y en README | `docs/ia.md` filas 7 y 8, README | **Resuelto en noviembre de 2026:** los marcadores se reemplazaron por el estado real (URLs 404 declaradas, acciones humanas pendientes); el run remoto y SonarCloud siguen abiertos y se declaran así |
 
 ## 6. Dependencias propuestas por el modelo
 
@@ -70,7 +71,8 @@ Desde `0c2b53a` se añadieron `pyyaml==6.0.2` y `jsonschema==4.23.0`, más el st
 - Los 7 paquetes directos de `app/frontend/package.json` existen en el registro de npm con
   historial desde 2011 a 2016 (no son nombres recientes).
 - **Hallazgo:** `next@14.2.15` está marcado como deprecado por vulnerabilidad de seguridad en el registro.
-  La última 14.2.x sin marca es `14.2.35`. Corrección: `cd app/frontend && npm install next@14.2.35`.
+  La última 14.2.x sin marca es `14.2.35`. **Corregido en noviembre de 2026:** `app/frontend/package.json` y
+  `package-lock.json` fijan `14.2.35`; el build se valida en CI.
 
 ## 7. Credenciales
 

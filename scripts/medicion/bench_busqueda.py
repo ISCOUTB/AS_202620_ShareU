@@ -36,11 +36,46 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 RAIZ = Path(__file__).resolve().parents[2]
+DIR_MEDICIONES = RAIZ / "docs" / "evidencia" / "mediciones"
+HOSTS_LOCALES = {"127.0.0.1", "localhost", "::1"}
 UMBRAL_P95_MS = 500.0
 UMBRAL_ERROR = 0.01
 UMBRAL_LECTURAS_POR_BUSQUEDA = 0.1
+
+
+def _url_medible(url: str) -> str:
+    """Valida la URL objetivo antes de usarla.
+
+    El banco acepta por omisión solo hosts locales y exige una variable de
+    entorno explícita para medir un despliegue externo. Así la herramienta no
+    se convierte en un cliente que sigue una URL arbitraria (S8703, S13).
+    """
+    partes = urlparse(url)
+    if partes.scheme not in {"http", "https"} or not partes.hostname:
+        raise SystemExit("--url debe tener la forma http(s)://host[:puerto][/ruta]")
+    if partes.hostname not in HOSTS_LOCALES and os.getenv("SHAREU_BENCH_PERMITIR_REMOTO") != "1":
+        raise SystemExit(
+            "Para medir un host externo exporta SHAREU_BENCH_PERMITIR_REMOTO=1; "
+            "por omisión el banco solo apunta a 127.0.0.1, localhost o ::1"
+        )
+    return url.rstrip("/")
+
+
+def _destino_seguro(ruta: str) -> Path:
+    """Restringe los artefactos de salida a `docs/evidencia/mediciones`.
+
+    Evita que un argumento con `..` o una ruta absoluta escriba fuera del
+    repositorio (S8707, S13).
+    """
+    destino = (RAIZ / ruta).resolve()
+    if not destino.is_relative_to(DIR_MEDICIONES):
+        raise SystemExit(
+            f"La ruta de salida debe quedar dentro de {DIR_MEDICIONES}: {ruta}"
+        )
+    return destino
 
 
 def _percentil(valores: list[float], p: float) -> float:
@@ -132,7 +167,7 @@ async def _medir(args) -> dict:
 
         cliente_falso = None
         transporte = None
-        cliente = httpx.AsyncClient(base_url=args.url.rstrip("/"), timeout=30.0)
+        cliente = httpx.AsyncClient(base_url=_url_medible(args.url), timeout=30.0)
         url = "/busqueda/documentos"
         entorno = f"http ({args.url})"
     else:
@@ -273,11 +308,11 @@ def main() -> int:
     texto_md = _markdown(resultado)
 
     if args.json_out:
-        destino = Path(args.json_out)
+        destino = _destino_seguro(args.json_out)
         destino.parent.mkdir(parents=True, exist_ok=True)
         destino.write_text(json.dumps(resultado, indent=2, ensure_ascii=False), encoding="utf-8")
     if args.md_out:
-        destino = Path(args.md_out)
+        destino = _destino_seguro(args.md_out)
         destino.parent.mkdir(parents=True, exist_ok=True)
         destino.write_text(texto_md, encoding="utf-8")
 

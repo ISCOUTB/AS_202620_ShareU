@@ -12,7 +12,7 @@ WORKDIR /app
 
 FROM base AS dependencias
 COPY requirements.txt .
-RUN pip install --prefix=/instalado -r requirements.txt
+RUN pip install --only-binary=:all: --require-hashes --prefix=/instalado -r requirements.txt
 
 FROM base
 COPY --from=dependencias /instalado /usr/local

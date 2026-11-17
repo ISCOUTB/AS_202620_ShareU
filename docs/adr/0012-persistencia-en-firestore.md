@@ -1,15 +1,17 @@
 # ADR 0012: Persistencia en Firestore (Firebase) en lugar de SQLite
 
-- **Estado:** Propuesto (pasa a Aceptado cuando el equipo lo apruebe)
-- **Fecha:** septiembre de 2026
+- **Estado:** Aceptado
+- **Fecha:** septiembre de 2026, aceptado en noviembre de 2026
 - **Aspecto relacionado:** Disponibilidad / Modificabilidad
 - **Reemplaza:** la parte de persistencia del ADR 0006 (SQLite sin disco persistente)
+- **Relacionado:** [ADR 0011](0011-identidad-de-datos-y-propiedad-por-modulo.md) (identificadores),
+  [ADR 0013](0013-cache-de-lectura-con-invalidacion.md) (caché)
 
 ## Contexto
 
-SQLite vive dentro del contenedor del backend. En Render Free no hay disco persistente, así que los datos
+SQLite vivía dentro del contenedor del backend. El contenedor no tiene disco persistente, así que los datos
 vuelven a los de ejemplo en cada reinicio o despliegue (README, ADR 0006). El equipo decidió usar Firebase como
-base de datos. La restricción de costo sigue siendo USD 0 y sin tarjeta (`docs/arc42/arc42.md` §2): Firestore en el
+base de datos. La restricción de costo sigue siendo USD 0 y sin tarjeta (`docs/arc42/00-portada.md` §2): Firestore en el
 plan Spark la cumple.
 
 ## Decisión
@@ -21,17 +23,17 @@ plan Spark la cumple.
    OpenAPI no cambia.
 4. Las reglas de Firestore niegan todo acceso de clientes (`allow read, write: if false;`). El backend accede con
    una cuenta de servicio, que ignora las reglas.
-5. La credencial (JSON de la cuenta de servicio) se entrega por la variable `FIREBASE_CREDENTIALS_JSON` en Render y
+5. La credencial (JSON de la cuenta de servicio) se entrega por la variable `FIREBASE_CREDENTIALS_JSON` en Dokploy y
    en el `.env` local. Nunca se sube al repositorio.
 6. Los documentos conservan el campo `id` entero; el id del documento en Firestore es ese mismo número como texto.
-7. Las pruebas usan un Firestore falso en memoria (`tests/conftest.py`): no necesitan red ni credenciales, y el CI
+7. Las pruebas usan un Firestore falso en memoria (`tests/firestore_falso.py`): no necesitan red ni credenciales, y el CI
    no cambia.
 
 ## Alternativas consideradas
 
 ### A. Mantener SQLite — descartada
 - Ventaja: sin dependencia externa.
-- Desventaja: los datos se pierden en cada despliegue de Render Free; no sirve para demostrar calificaciones ni
+- Desventaja: los datos se pierden en cada reinicio o despliegue del contenedor; no sirve para demostrar calificaciones ni
   usuarios reales.
 
 ### B. Firestore consumido directamente desde el frontend — descartada
@@ -59,8 +61,10 @@ plan Spark la cumple.
 - **Costo en lecturas:** cada búsqueda lee todos los documentos (el filtrado sigue en `busqueda.service`). El plan Spark
   da 50 000 lecturas al día: con 5 documentos son unas 10 000 búsquedas diarias; con 500, solo 100. Es el criterio que
   activa la caché del §8.7 de arc42.
-- **Ids:** Firestore no tiene autoincremento. Para publicar documentos nuevos habrá que generar el id; el ADR 0011
-  recomienda en ese momento pasar a ids de texto (id automático de Firestore) y publicar la versión mayor del contrato.
+- **Ids:** Firestore no tiene autoincremento. La publicación reserva el id con
+  `DocumentReference.create()`, que falla con `AlreadyExists` y prueba el siguiente
+  (`_reservar_id_y_crear`), de modo que dos escritores concurrentes no comparten id. La decisión
+  de mantener ids enteros y su costo de reversión está en el ADR 0011.
 - El Firestore falso de las pruebas no valida índices ni cuotas reales: conviene una prueba manual contra el proyecto real.
 
 ## Criterio de reapertura
@@ -71,4 +75,4 @@ necesita consultas que Firestore no resuelva.
 ## Trazabilidad
 
 `docs/adr/0006-plataforma-backend-despliegue.md` → este ADR → `app/documentos/repository.py`,
-`tests/conftest.py`, `tests/test_repositorio_firestore.py`, `requirements.in` → `docs/arc42/arc42.md` §2, §7, §8.
+`tests/firestore_falso.py`, `tests/test_repositorio_firestore.py`, `requirements.in` → `docs/arc42/00-portada.md` §2, §7, §8.

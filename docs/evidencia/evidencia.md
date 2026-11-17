@@ -1,21 +1,29 @@
 # Evidencia de revisión de documentos de trazabilidad
 
-## Revisión de PDFs
+## Estado actual
 
-Se revisaron los dos archivos ubicados en `docs/adr/`:
+En el repositorio queda **un** PDF de trazabilidad:
 
-- `ShareU_Trazabilidad.pdf`
-- `ShareU_Trazabilida.pdf`
+- [`ShareU_Trazabilidad.pdf`](ShareU_Trazabilidad.pdf) — resumen de la decisión arquitectónica, el
+  corte de búsqueda, el objetivo de usabilidad, los ADR y las pruebas.
 
-Los archivos **no tienen el mismo contenido**. Ambos tratan sobre trazabilidad, pero
-documentan decisiones y evidencias diferentes, por lo que no se eliminó ninguno.
+El archivo se movió desde `docs/adr/` a `docs/evidencia/` porque es evidencia, no una decisión: los
+ADR son los únicos documentos que deben vivir en `docs/adr/` y su nombre debe seguir el patrón
+`NNNN-*.md`.
 
-- `ShareU_Trazabilida.pdf`: resumen de trazabilidad de la decisión arquitectónica,
-  diagnóstico, cambio aplicado, medición y enlaces.
-- `ShareU_Trazabilidad.pdf`: evidencia del corte de búsqueda, objetivo de usabilidad,
-  ADR 0002, pruebas, CI y métrica de interacciones.
+## Nota histórica
 
-## Resultado
+Una revisión anterior describió dos PDF con distinto contenido (`ShareU_Trazabilida.pdf` y
+`ShareU_Trazabilidad.pdf`). Ese estado ya no corresponde al repositorio actual: hoy solo existe el
+segundo. Si se recupera el otro archivo, debe revisarse antes de citarlo y no debe duplicar la
+evidencia ya cubierta por los ADR y las mediciones.
 
-Se conservaron los dos PDFs y se añadió esta evidencia en
-`docs/evidencia/evidencia.md`.
+## Dónde está la evidencia vigente
+
+- Decisiones: [`../adr/`](../adr/).
+- Trazabilidad de aspectos: [`../aspectos.md`](../aspectos.md).
+- Rendimiento y costo: [`mediciones/`](mediciones/) y [`s10-experimento.md`](s10-experimento.md),
+  [`s14-medicion.md`](s14-medicion.md).
+- Fallos, datos, mensajería, amenazas: [`s11-fallos-parciales.md`](s11-fallos-parciales.md),
+  [`s12-datos-cache.md`](s12-datos-cache.md), [`s12-taller-mensajes.md`](s12-taller-mensajes.md),
+  [`s13-amenazas.md`](s13-amenazas.md).

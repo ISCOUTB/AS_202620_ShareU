@@ -1,63 +1,11 @@
-# Aspectos de calidad
+# Aspectos de calidad (ruta histórica)
 
-## Idea del proyecto
+Este archivo se conserva para no romper enlaces antiguos. La versión canónica, con la tabla de
+ocho columnas actualizada a S10–S14, está en **[`docs/aspectos.md`](../aspectos.md)**.
 
-ShareU es una plataforma web para estudiantes universitarios. Permite compartir
-y encontrar apuntes, ejercicios, talleres, parciales y otros documentos
-organizados por universidad, carrera y materia.
+Contenido anterior: escenario de usabilidad, tácticas y una tabla de trazabilidad de tres filas.
+La tabla vigente incluye los aspectos de rendimiento/costo (A2), disponibilidad (A3), consistencia
+(A4), seguridad (A5), mantenibilidad (A6), operabilidad (A7), costo (A8), privacidad (A9) y
+desacoplamiento temporal (A10), cada uno con C4, ADR, código, pruebas y evidencia.
 
-## Aspecto prioritario: Usabilidad
-
-La usabilidad es el aspecto de calidad prioritario porque el valor principal de
-ShareU depende de que un estudiante pueda encontrar material académico de forma
-ágil.
-
-### Escenario de calidad
-
-| Elemento | Descripción |
-|---|---|
-| **Fuente del estímulo** | Un estudiante universitario que utiliza ShareU |
-| **Estímulo** | El estudiante necesita encontrar material académico específico y combina criterios de búsqueda |
-| **Artefacto** | Interfaz y módulo de búsqueda |
-| **Entorno** | Uso normal desde computador o celular |
-| **Respuesta** | El sistema permite combinar palabra clave, universidad, carrera, materia y tipo en un único flujo |
-| **Medida de respuesta** | El flujo debe completarse en **3 interacciones o menos**; técnicamente, la búsqueda combinada se resuelve con una solicitud HTTP |
-
-### Restricción identificada
-
-El presupuesto de interacción limita el flujo principal a tres interacciones. Por
-eso se evita obligar al estudiante a navegar entre pantallas o aplicar filtros
-por separado.
-
-### Tácticas
-
-- Filtros visibles en la misma vista de resultados.
-- Palabra clave y filtros combinables en un único formulario.
-- Un solo envío para transmitir todos los criterios al backend.
-- Información clave visible en cada resultado: título, materia, tipo, autor y
-  calificación.
-- Mensajes claros cuando no existen resultados.
-
-### Verificación
-
-La prueba automatizada `test_busqueda_combina_filtros` comprueba que varios
-criterios se aceptan en una única solicitud. La evidencia técnica de la métrica
-se documenta en [`docs/evidencia/medicion-usabilidad.md`](../evidencia/medicion-usabilidad.md).
-
-La métrica técnica no sustituye una prueba de usuarios reales; si la rúbrica
-exige participantes, esa actividad debe ejecutarse y anexarse como evidencia.
-
-## Trazabilidad
-
-| Requisito / restricción | Aspecto | ADR | Código | Prueba | Evidencia |
-|---|---|---|---|---|---|
-| ≤ 3 interacciones | Usabilidad | [ADR 0002](https://github.com/ISCOUTB/AS_202620_ShareU/blob/b7737be88997143da3d03acdec6d9c3419c402f4/docs/adr/0002-usabilidad-busqueda-en-una-solicitud.md) | [`app/frontend/`](https://github.com/ISCOUTB/AS_202620_ShareU/tree/b7737be88997143da3d03acdec6d9c3419c402f4/app/frontend), [`app/busqueda/`](https://github.com/ISCOUTB/AS_202620_ShareU/tree/b7737be88997143da3d03acdec6d9c3419c402f4/app/busqueda) | [`test_busqueda_combina_filtros`](https://github.com/ISCOUTB/AS_202620_ShareU/blob/b7737be88997143da3d03acdec6d9c3419c402f4/tests/test_busqueda.py#L36-L50) | [`medicion-usabilidad.md`](https://github.com/ISCOUTB/AS_202620_ShareU/blob/b7737be88997143da3d03acdec6d9c3419c402f4/docs/evidencia/medicion-usabilidad.md) |
-| Arquitectura por dominios | Modificabilidad / simplicidad | [ADR 0001](https://github.com/ISCOUTB/AS_202620_ShareU/blob/b7737be88997143da3d03acdec6d9c3419c402f4/docs/adr/0001-estilo-arquitectonico.md) | [`app/*`](https://github.com/ISCOUTB/AS_202620_ShareU/tree/b7737be88997143da3d03acdec6d9c3419c402f4/app) | [`tests/test_esqueleto.py`](https://github.com/ISCOUTB/AS_202620_ShareU/blob/b7737be88997143da3d03acdec6d9c3419c402f4/tests/test_esqueleto.py) | [ADR 0001](https://github.com/ISCOUTB/AS_202620_ShareU/blob/b7737be88997143da3d03acdec6d9c3419c402f4/docs/adr/0001-estilo-arquitectonico.md) |
-| Vigilar el costo de interacción (búsquedas sin resultados) y mantener la frontera entre módulos | Usabilidad / Modificabilidad | [ADR 0008](../adr/0008-metrica-tras-interfaz-de-administracion.md) | [`app/administracion/service.py`](../../app/administracion/service.py), [`app/busqueda/service.py`](../../app/busqueda/service.py) | [`tests/test_metricas.py`](../../tests/test_metricas.py), [`tests/test_fronteras.py`](../../tests/test_fronteras.py), [`tests/test_escenario_usabilidad.py`](../../tests/test_escenario_usabilidad.py) | [`evidencia-s9.md`](../evidencia/evidencia-s9.md) |
-
-## Decisión arquitectónica relacionada
-
-El escenario de usabilidad también motiva el uso de un **monolito modular**. La
-búsqueda permanece como un módulo de dominio independiente, lo que permite
-evolucionar el flujo sin mezclar sus reglas con calificaciones,
-administración o usuarios.
+Si algún documento todavía enlaza la ruta histórica, debe apuntar a `docs/aspectos.md`.

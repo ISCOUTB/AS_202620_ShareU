@@ -2,200 +2,197 @@
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ISCOUTB_AS_202620_ShareU&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ISCOUTB_AS_202620_ShareU)
 
-ShareU es una plataforma web para compartir y encontrar material académico
-organizado por universidad, carrera y materia.
+> El *badge* refleja el estado real del proyecto público en SonarCloud (organización `isco-utb`).
+> Al 2026-11-17 el gate está en **ERROR** (`new_reliability_rating=3`, `new_security_rating=3`) por
+> 44 incidencias abiertas; no se oculta ni se presenta como verde. El detalle y la condición para
+> cerrarlo están en [`docs/arc42/11-riesgos-y-deuda-tecnica.md`](docs/arc42/11-riesgos-y-deuda-tecnica.md) §11.5.
 
-## Problema
+ShareU es una plataforma web para **compartir y encontrar material académico** organizado por
+universidad, carrera y materia: apuntes, ejercicios, talleres, parciales y guías.
 
-Los estudiantes suelen perder tiempo buscando apuntes, ejercicios, talleres,
-parciales y otros materiales en diferentes medios.
+- **Backend:** Python 3.11+ / FastAPI, monolito modular.
+- **Frontend:** Next.js 14 (React).
+- **Datos:** Firestore (Firebase, plan Spark).
+- **Mensajería:** outbox en proceso para `documento.publicado`.
+- **Despliegue:** contenedores Docker en el servidor del laboratorio con Dokploy.
+- **Costo:** USD 0/mes bajo el volumen académico (ver puntos de ruptura).
 
-## Arquitectura
+## Arranque rápido
 
-ShareU utiliza un **monolito modular**: un único desplegable organizado por
-dominios.
-
-- `usuarios`: registro, autenticación y perfil.
-- `documentos`: clasificación y persistencia de material académico.
-- `busqueda`: búsqueda, filtros y ordenamiento de resultados.
-- `calificaciones`: valoración de documentos.
-- `administracion`: reportes y moderación.
-
-La decisión está documentada en
-[`docs/adr/0001-estilo-arquitectonico.md`](docs/adr/0001-estilo-arquitectonico.md)
-y se relaciona con el escenario de usabilidad de
-[`docs/aspectos/aspectos.md`](docs/aspectos/aspectos.md).
-
-## Requisitos
-
-- Python 3.10 o superior y `pip` (backend).
-- Node.js 18 o superior (frontend).
-- Opcional: Docker, para levantar el backend sin instalar Python.
-
-
-## Instalación
+### Con Docker (recomendado)
 
 ```bash
-git clone https://github.com/ISCOUTB/AS_202620_ShareU.git
-cd AS_202620_ShareU
-```
-
-Crear y activar un entorno virtual:
-
-### Windows
-
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-```
-
-### Linux/macOS
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-Instalar dependencias:
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-## Ejecución
-
-```bash
-uvicorn app.main:app --reload
-```
-
-La API queda disponible en `http://127.0.0.1:8000`.
-
-Documentación interactiva: `http://127.0.0.1:8000/docs`.
-
-## Sistema desplegado
-
-| Pieza | URL |
-|---|---|
-| Frontend (Next.js, Vercel) | <URL Vercel> |
-| Backend (FastAPI, Render) | <URL Render> |
-| Documentación de la API | <URL Render>/docs |
-| Verificación de salud | <URL Render>/health |
-
-El backend gratuito "duerme" tras un periodo sin tráfico, así que la primera
-solicitud puede tardar unos segundos. Los datos vuelven a los de ejemplo en
-cada reinicio (ver `docs/adr/0006-plataforma-backend-despliegue.md`).
-
-## Ejecución con Docker
-
-```bash
+copy .env.example .env      # Windows
+cp .env.example .env        # Linux/macOS
 docker compose up --build
 ```
 
-El backend queda en `http://127.0.0.1:8000`.
+- API: <http://127.0.0.1:8000> — documentación en `/docs`, salud en `/health`.
+- Frontend: <http://127.0.0.1:3000>.
+- Sin `FIREBASE_CREDENTIALS_JSON`, la API arranca y `/health` responde, pero las rutas de datos
+  devuelven **503**; es el comportamiento fail-closed esperado.
 
-## Ejecución del frontend
+### Sin Docker
 
 ```bash
-cd frontend
-cp .env.example .env.local
+python -m venv .venv
+.venv\Scripts\activate            # Windows
+# source .venv/bin/activate       # Linux/macOS
+python -m pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+Frontend:
+
+```bash
+cd app/frontend
+copy .env.example .env.local      # o cp
 npm install
 npm run dev
 ```
 
-El frontend queda en `http://localhost:3000` y consume el backend indicado en
-`NEXT_PUBLIC_API_URL`.
+## Configuración
 
-## Variables de entorno
+| Variable | Para qué | Si falta |
+|---|---|---|
+| `FIREBASE_CREDENTIALS_JSON` | Cuenta de servicio de Firebase (JSON en una línea) | Rutas de datos devuelven 503 |
+| `SHAREU_ADMIN_TOKEN` | Escritura y bandeja de moderación | Rutas protegidas devuelven 503 |
+| `SHAREU_FRONTEND_ORIGIN` | Orígenes CORS separados por coma | Se aceptan los de Next.js en local |
+| `SHAREU_CACHE_TTL_SEGUNDOS` | TTL de la caché; `0` la apaga | 60 |
+| `SHAREU_EVENTO_ESPERA_BASE_SEGUNDOS` | Base de reintentos del outbox | 1,0 |
+| `NEXT_PUBLIC_API_URL` | URL de la API que consume el frontend | `http://127.0.0.1:8000` |
 
-Se declaran en `.env.example` (backend) y `frontend/.env.example`. Los valores
-reales se configuran en el panel de Render, en Vercel y en GitHub Actions
-Secrets (`SONAR_TOKEN`); nunca se suben al repositorio.
+Los valores reales viven en Dokploy → Environment o en un `.env` local. **Nunca** se versionan.
+`.env.example` solo contiene marcadores.
 
-## Observabilidad
+## Endpoints principales
 
-- `GET /health`: estado del servicio.
-- Logs en JSON por solicitud (`request_id`, `method`, `path`, `status_code`, `duration_ms`).
-- `GET /administracion/metricas`: total de búsquedas y tasa de búsquedas sin
-  resultados, ligada al escenario de usabilidad de `docs/aspectos/aspectos.md`.
+| Método y ruta | Qué hace | Credencial |
+|---|---|---|
+| `GET /health` | Estado del servicio | No |
+| `GET /busqueda/documentos` | Búsqueda combinada: `universidad`, `carrera`, `materia`, `tipo`, `palabra_clave`, `min_calificacion` | No |
+| `POST /documentos` | Publica metadatos; requiere `Idempotency-Key` | `X-Admin-Token` |
+| `GET /documentos/cache` | Estado de la caché | No |
+| `GET /administracion/metricas` | Búsquedas y tasa sin resultados | No |
+| `GET /administracion/cache` | Caché (vista administrativa) | No |
+| `GET /administracion/eventos` | Contadores del outbox | No |
+| `GET /administracion/revision` | Bandeja de revisión | `X-Admin-Token` |
+| `POST /administracion/revision/{id}/resolver` | Aprueba y retira de la bandeja | `X-Admin-Token` |
 
-## Contrato de la API
-
-`docs/api/openapi.yaml` es la fuente de verdad; `tests/test_contrato.py`
-falla si una respuesta real deja de cumplirlo.
-
-## Corte vertical de búsqueda
-
-El recorrido funcional implementado consulta documentos persistidos en SQLite y
-permite combinar los filtros en una sola solicitud:
-
-```text
-GET /busqueda/documentos
-```
-
-Filtros disponibles:
-
-- `universidad`
-- `carrera`
-- `materia`
-- `tipo`
-- `palabra_clave`
-- `min_calificacion`
-
-Ejemplo:
+Ejemplo de búsqueda:
 
 ```bash
 curl "http://127.0.0.1:8000/busqueda/documentos?materia=Programación"
 ```
 
-La respuesta contiene el total y los resultados con título, universidad,
-carrera, materia, tipo, autor y calificación.
-
-## Verificación
-
-Endpoint de salud:
+Ejemplo de publicación idempotente:
 
 ```bash
-curl http://127.0.0.1:8000/health
+curl -X POST http://127.0.0.1:8000/documentos \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Token: $SHAREU_ADMIN_TOKEN" \
+  -H "Idempotency-Key: demo-0001" \
+  -d '{"titulo":"Taller de Python","universidad":"UTB","carrera":"Ingeniería de Sistemas","materia":"Programación","tipo":"Taller","autor":"Ana","calificacion":4.5,"palabras_clave":"python"}'
 ```
 
-Respuesta esperada:
+Repetir con la misma clave y el mismo cuerpo devuelve **200** y no duplica el documento ni el
+evento; con otro cuerpo devuelve **409**.
 
-```json
-{"estado": "ok"}
-```
-
-Los cinco módulos conservan un endpoint de verificación:
-
-- `/usuarios/ping`
-- `/documentos/ping`
-- `/busqueda/ping`
-- `/calificaciones/ping`
-- `/administracion/ping`
-
-## Pruebas y medición
+## Pruebas
 
 ```bash
 pytest -q
 ```
 
-El escenario de usabilidad se verifica también mediante una medición reproducible:
-una búsqueda con cualquier combinación de criterios se resuelve mediante **una sola
-solicitud HTTP** al endpoint `/busqueda/documentos`. El objetivo es mantener el
-flujo de búsqueda dentro del umbral de **3 interacciones o menos**. La evidencia
-metodológica se encuentra en [`docs/evidencia/medicion-usabilidad.md`](docs/evidencia/medicion-usabilidad.md).
+No requieren credenciales: usan un Firestore falso (`tests/firestore_falso.py`). Cubren contrato,
+fronteras, búsqueda, usabilidad, caché, idempotencia, eventos, resiliencia y seguridad. El workflow
+[`.github/workflows/tests.yml`](.github/workflows/tests.yml) ejecuta además `pip-audit`, `npm audit`,
+la medición y SonarCloud cuando hay token.
 
-El workflow de GitHub Actions en
-[`.github/workflows/tests.yml`](.github/workflows/tests.yml) ejecuta estas
-pruebas automáticamente en cada `push` y `pull_request`.
+## Medición de rendimiento y costo
+
+```bash
+python -m scripts.medicion.bench_busqueda --sin-cache --etiqueta linea-base-sin-cache \
+  --json-out docs/evidencia/mediciones/s10-linea-base-sin-cache.json \
+  --md-out docs/evidencia/mediciones/s10-linea-base-sin-cache.md
+
+python -m scripts.medicion.bench_busqueda --etiqueta local-asgi \
+  --json-out docs/evidencia/mediciones/s14-local-asgi.json \
+  --md-out docs/evidencia/mediciones/s14-local-asgi.md
+```
+
+Umbral (arc42 §10): **p95 ≤ 500 ms**, **error < 1 %**, **≤ 0,1 lecturas Firestore/búsqueda** con
+caché. Resultado local: 67,54 ms, 0 % y 0,07 lecturas. La corrida es ASGI en proceso (sin red): es un
+límite inferior y no se extrapola al despliegue.
+
+Contra el servicio desplegado, el banco exige permiso explícito para hosts externos (defensa contra
+SSRF, S13):
+
+```bash
+SHAREU_BENCH_PERMITIR_REMOTO=1 python -m scripts.medicion.bench_busqueda \
+  --url https://api-shareu.iscoutb.dev --etiqueta despliegue
+```
+
+Los artefactos solo se escriben dentro de `docs/evidencia/mediciones/`; una ruta con `..` o fuera de
+esa carpeta se rechaza.
+
+## Estado del despliegue (honesto)
+
+| URL | Estado al 2026-11-16 |
+|---|---|
+| <https://shareu.iscoutb.dev> | **HTTP 404 — no verificado** |
+| <https://api-shareu.iscoutb.dev> | **HTTP 404 — no verificado** |
+
+El descriptor `Dockploy/compose.lab.yml` y los Dockerfile están listos, pero **no** se afirma que el
+servicio esté activo. Verificarlo —desplegar, comprobar `/health` y actualizar esta tabla— es una
+acción humana pendiente.
+
+## Arquitectura
+
+Monolito modular con cinco dominios (`usuarios`, `documentos`, `busqueda`, `calificaciones`,
+`administracion`) y tres mecanismos transversales:
+
+- **Caché de lectura** en proceso con TTL e invalidación tras escribir (ADR 0013).
+- **Outbox** en proceso para `documento.publicado`, con deduplicación, reintentos y DLQ (ADR 0015).
+- **Seguridad**: `X-Admin-Token` fail-closed, CORS explícito y cabeceras (ADR 0014).
+
+Un módulo no importa archivos internos de otro; el cableado y la suscripción al evento viven en
+`app/main.py`. Lo verifica `tests/test_fronteras.py`.
+
+```text
+Navegador -> Next.js -> FastAPI -> Firestore
+                           |
+                           +-> caché
+                           +-> outbox -> administración (bandeja)
+```
 
 ## Documentación
 
-- [arc42](docs/arc42/arc42.md)
-- [C4 nivel 1](docs/c4/nivel1.mmd)
-- [C4 nivel 2](docs/c4/nivel-2.md) — [diagrama editable](docs/c4/nivel2.mmd)
-- [ADR 0001](docs/adr/0001-estilo-arquitectonico.md)
-- [Aspectos de calidad](docs/aspectos/aspectos.md)
-- [Uso de IA](docs/ia/ia.md)
-- [ADR 0002](docs/adr/0002-usabilidad-busqueda-en-una-solicitud.md), [0003](docs/adr/0003-separacion-contexto-calificaciones.md), [0004](docs/adr/0004-integracion-sincrona-y-asincrona.md), [0005](docs/adr/0005-migracion-frontend-nextjs.md), [0006](docs/adr/0006-plataforma-backend-despliegue.md), [0007](docs/adr/0007-plataforma-frontend-despliegue.md)
-- [Contrato OpenAPI](docs/api/openapi.yaml)
-- [Estimación de costo](docs/costos/estimacion-costo.md)
+| Documento | Contenido |
+|---|---|
+| [arc42](docs/arc42/00-portada.md) | Arquitectura completa, §1–§12 |
+| [C4 nivel 1](docs/c4/nivel1.mmd) / [nivel 2](docs/c4/nivel-2.md) | Contexto y contenedores ([editable](docs/c4/nivel2.mmd)) |
+| [Aspectos y trazabilidad](docs/aspectos.md) | Tabla de 8 columnas: requisito → C4 → ADR → código → pruebas → evidencia |
+| [ADR](docs/adr/) | 16 decisiones con alternativas y consecuencias |
+| [Contrato OpenAPI](docs/api/openapi.yaml) | Fuente de verdad de la API (v1.3.0) |
+| [Consistencia y caché](docs/datos/consistencia.md) | Operación → garantía |
+| [Contrato del evento](docs/eventos/contrato-evento.md) / [límites](docs/eventos/limites.md) | Mensajería |
+| [Modos de fallo](docs/resiliencia/modos-de-fallo.md) | No responde / tarde / dos veces, idempotencia y saga |
+| [Amenazas](docs/seguridad/amenazas.md) / [dependencias](docs/seguridad/dependencias.md) | STRIDE, privacidad y cadena de suministro |
+| [Costos](docs/costos/estimacion-costo.md) | USD 0/mes y puntos de ruptura |
+| [Evidencia S10–S14](docs/evidencia/) | Informes y mediciones |
+| [Resúmenes de entrega](docs/entrega/) | Dos páginas S10 y una página S11–S14 |
+| [Uso de IA](docs/ia.md) | Registro por semana con rechazos y revisión |
+| [DDD](docs/ddd/contextos.md) | Contextos, propiedad de datos y auditoría |
+
+## Limitaciones conocidas
+
+- No hay autenticación de estudiantes; solo token administrativo (ADR 0014).
+- No se almacenan archivos, solo metadatos.
+- La caché y el outbox viven en memoria: una instancia, sin durabilidad (ADR 0013/0015).
+- No hay *single-flight*: la caché fría concurrente genera lecturas extra.
+- Sin rate limit; el límite de CPU/memoria del contenedor es el techo.
+- El despliegue y el pipeline remoto no están verificados; se declaran abiertos.
+
+Todas las limitaciones y su criterio de reapertura están en
+[arc42 §11](docs/arc42/11-riesgos-y-deuda-tecnica.md).

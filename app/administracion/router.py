@@ -2,6 +2,8 @@
 
 Responsabilidad: reportes, moderación y métricas del sistema.
 """
+from typing import Annotated
+
 from fastapi import APIRouter, Header, HTTPException, status
 
 from app.administracion.service import (
@@ -47,7 +49,7 @@ def eventos() -> dict:
     },
 )
 def revision(
-    x_admin_token: str | None = Header(default=None, alias="X-Admin-Token"),
+    x_admin_token: Annotated[str | None, Header(alias="X-Admin-Token")] = None,
 ) -> dict:
     """Bandeja de revisión alimentada por el evento `documento.publicado`.
 
@@ -69,7 +71,7 @@ def revision(
 )
 def resolver(
     id_documento: int,
-    x_admin_token: str | None = Header(default=None, alias="X-Admin-Token"),
+    x_admin_token: Annotated[str | None, Header(alias="X-Admin-Token")] = None,
 ) -> dict:
     """Aprueba y retira un documento de la bandeja de revisión."""
     exigir_token_admin(x_admin_token)

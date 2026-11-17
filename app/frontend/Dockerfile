@@ -6,7 +6,7 @@ FROM node:22-alpine AS construccion
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 COPY . .
 # NEXT_PUBLIC_* se fija en el build: llega como build arg.
 ARG NEXT_PUBLIC_API_URL=http://127.0.0.1:8000

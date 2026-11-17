@@ -1,100 +1,108 @@
 # 6. Vista de ejecución
 
-## 6.1 Escenario: buscar material (síncrono)
+## 6.1 Escenario A: buscar material (síncrono, camino crítico)
 
-Contrato: [`docs/api/openapi.yaml`](../api/openapi.yaml) — `GET
-/busqueda/documentos`. Integración síncrona de extremo a extremo: el
-estudiante espera la respuesta HTTP para ver resultados (justificación de
-por qué es síncrona, y no asíncrona, en
-[`../adr/0004-integracion-sincrona-y-asincrona.md`](../adr/0004-integracion-sincrona-y-asincrona.md)).
+Contrato: [`docs/api/openapi.yaml`](../api/openapi.yaml), `GET /busqueda/documentos`. El estudiante
+espera la respuesta para ver los resultados; por eso el borde es síncrono (ADR 0004).
 
 | Paso | De → a | Protocolo / formato | Naturaleza |
 |---|---|---|---|
-| 1 | Estudiante → Aplicación web | HTTPS | Síncrono |
-| 2 | Aplicación web → `busqueda.router` | `GET /busqueda/documentos` · JSON/HTTPS | Síncrono |
-| 3 | `busqueda.router` → `busqueda.service` | Llamada de función Python | Síncrono, in-process |
-| 4 | `busqueda.service` → `documentos.service` | Llamada de función Python (interfaz de servicio, ADR 0001) | Síncrono, in-process |
-| 5 | `documentos.service` → `documentos.repository` | Llamada de función Python | Síncrono, in-process |
-| 6 | `documentos.repository` → SQLite | SQL | Síncrono |
-| 7 | Respuesta: SQLite → ... → Aplicación web | JSON/HTTPS, cuerpo validado contra `ResultadoBusqueda` en el contrato | Síncrono |
+| 1 | Estudiante → aplicación web | HTTPS | Síncrona |
+| 2 | Aplicación web → `busqueda.router` | `GET /busqueda/documentos?...` JSON/HTTPS; timeout 15 s, 1 reintento | Síncrona |
+| 3 | `busqueda.router` → `busqueda.service` | Función Python | In-process |
+| 4 | `busqueda.service` → `documentos.service` | Función Python (interfaz de servicio) | In-process |
+| 5a | `documentos.service` → caché | Lectura de memoria si el TTL no venció | In-process |
+| 5b | `documentos.service` → `documentos.repository` → Firestore | `firebase-admin`, gRPC/HTTPS; timeout 2 s, 3 intentos | Síncrona (solo en *miss*) |
+| 6 | `busqueda.service` → `administracion.service` | Función Python: registra la métrica | In-process |
+| 7 | Respuesta al navegador | JSON validado contra `ResultadoBusqueda` | Síncrona |
 
 ```text
 Estudiante
-    |  HTTPS
-    v
-Aplicación web
-    |  GET /busqueda/documentos  (JSON/HTTPS)
-    v
-busqueda.router
-    |  función Python (in-process)
-    v
-busqueda.service
-    |  función Python (in-process) — interfaz de servicio
-    v
-documentos.service
-    |  función Python (in-process)
-    v
-documentos.repository
-    |  SQL
-    v
-SQLite
+   | HTTPS
+   v
+Web (Next.js) --GET /busqueda/documentos, JSON/HTTPS--> busqueda.router
+                                                          | función
+                                                          v
+                                                    busqueda.service
+                                                       |        |
+                                     función (interfaz)        | métrica
+                                                       v        v
+                                              documentos.service  administracion.service
+                                                 |        |
+                                        caché (hit)       | (miss)
+                                                 |        v
+                                                 |   repository --gRPC/HTTPS--> Firestore
+                                                 v
+                                             respuesta JSON
 ```
 
-Toda la cadena de los pasos 3 a 6 ocurre dentro del mismo proceso — no hay
-llamada de red interna que decidir como síncrona o asíncrona; esa decisión
-ya la fijó ADR 0001 al declarar un monolito modular. Lo que sí queda sujeto
-a la decisión de esta semana es el borde del sistema (pasos 1-2 y las
-integraciones de la sección 6.3).
+**Caché fría concurrente:** si N solicitudes llegan con la caché vacía, cada una puede leer
+Firestore (no hay *single-flight*). Es una limitación conocida, medida en S14 (21 lecturas en 300
+búsquedas) y declarada en §11.
 
-## 6.2 Escenario: sin resultados
+## 6.2 Escenario B: publicar un documento (síncrono + efecto asíncrono)
 
-Si ningún documento satisface los filtros, la API devuelve HTTP 200 con
-`total: 0` y una lista vacía (ver ejemplo `sinResultados` en el contrato).
-Esto permite que una interfaz futura muestre un mensaje claro y sugiera
-ajustar filtros. Sigue el mismo camino síncrono de la sección 6.1: no hay
-una ruta de fallo especial, es una respuesta válida del mismo contrato.
-
-## 6.3 Escenarios futuros: integraciones externas (ver ADR 0004)
-
-Estos flujos todavía no tienen código — se documentan aquí porque la
-decisión síncrono/asíncrono que los gobierna ya está tomada y debe guiar la
-implementación del próximo corte.
-
-**Publicar un documento (síncrono con almacenamiento):**
-
-```text
-Estudiante --HTTPS--> Aplicación web --JSON/HTTPS--> API backend
-                                                         |
-                                                REST/HTTPS (síncrono)
-                                                         v
-                                          Almacenamiento de archivos
-```
-
-La API espera la confirmación del almacenamiento antes de responder al
-estudiante; si falla, no se crea el registro en `documentos` (sin
-metadatos huérfanos).
-
-**Notificar por correo (asíncrono, evento/outbox):**
-
-```text
-API backend --publica evento (in-process)--> Cola / outbox
-                                                    |
-                                     entrega asíncrona, con reintentos
-                                                    v
-                                          Servicio de correo (SMTP/API)
-```
-
-La API responde al estudiante sin esperar la entrega del correo. El
-contrato de este evento se especificará en AsyncAPI cuando el módulo de
-notificaciones entre en alcance de un corte (hoy no hay implementación que
-contratar).
-
-## Resumen de naturaleza por integración
-
-| Integración | Naturaleza | Formato | Justificación |
+| Paso | De → a | Protocolo / formato | Naturaleza |
 |---|---|---|---|
-| Aplicación web → API backend | Síncrona | JSON/HTTPS | El estudiante necesita ver el resultado en la misma interacción |
-| `busqueda` → `documentos` | Síncrona, in-process | Llamada de función | Ya resuelto por ADR 0001 (monolito modular) |
-| `documentos` → SQLite | Síncrona | SQL | La respuesta HTTP depende del dato leído/escrito |
-| API backend → Almacenamiento | Síncrona (futura) | REST/HTTPS | Publicar sin archivo confirmado no es un resultado válido |
-| API backend → Correo | Asíncrona (futura) | Evento / outbox | Efecto secundario; no debe acoplar disponibilidad del flujo crítico |
+| 1 | Administrador → web → API | `POST /documentos`, JSON/HTTPS, `X-Admin-Token`, `Idempotency-Key` | Síncrona |
+| 2 | `documentos.router` → `seguridad` | Verificación del token (comparación en tiempo constante) | In-process |
+| 3 | `documentos.router` → `documentos.service` | Función Python | In-process |
+| 4 | `documentos.service` → `repository` | Búsqueda por `idempotency_key` + hash del cuerpo | In-process |
+| 5 | `repository` → Firestore | `DocumentReference.create()`, timeout 2 s, 3 intentos | Síncrona |
+| 6 | `repository` invalida la caché | `_cache.invalidar()` antes de devolver | In-process |
+| 7 | `documentos.router` → outbox | `eventos.publicar("documento.publicado", …)`; el `correlation_id` es el `request_id` | In-process |
+| 8 | API → administrador | **201** si creó, **200** si fue un reintento idempotente, **409** si la clave cambió de cuerpo, **503** si Firestore falla | Síncrona |
+| 9 | `BackgroundTasks` → `despachar` | Después de la respuesta; el consumidor actualiza la bandeja | Asíncrona |
+
+```text
+Administrador
+   | POST /documentos + token + Idempotency-Key
+   v
+router --token--> seguridad
+   |
+   v
+service --clave+hash--> repository --create()--> Firestore
+   |                        |
+   |                        +--> invalidar caché
+   +--> publicar evento --> outbox (memoria)
+   |
+   +--> 201/200/409/503 (respuesta)
+                              |
+                     BackgroundTasks: despachar
+                              |
+                              v
+                    administracion.revision (dedup por event_id)
+```
+
+**Si el consumidor falla**, el outbox reintenta 1 s y 2 s; al tercer fallo el evento pasa a la
+DLQ en memoria. La publicación **no** se cae: el documento ya está persistido y la respuesta ya
+salió. Si el administrador reintenta la misma publicación, la clave de idempotencia devuelve 200 y
+**no** se emite un segundo evento.
+
+## 6.3 Escenario C: Firestore no responde o responde tarde
+
+1. `_con_reintentos` agota 3 intentos con timeout de 2 s.
+2. Se lanza `ErrorPersistencia`.
+3. El router traduce a **503** con un mensaje genérico; no se filtra la traza al cliente.
+4. El middleware registra la solicitud con `status_code=503` y `duration_ms`.
+5. `/health` sigue respondiendo `{"estado":"ok"}`: el proceso está vivo y el fallo es de la
+   dependencia, no del contenedor.
+6. Para una búsqueda, la caché puede servir una lista previa si el TTL no venció; si no, el
+   estudiante ve el mensaje de error del frontend y puede reintentar.
+
+## 6.4 Escenario D: sin resultados
+
+La API devuelve **200** con `total: 0` y lista vacía (ejemplo `sinResultados` del contrato). No es
+un error: el frontend muestra «Nada por aquí. Prueba otra palabra clave». La métrica
+`tasa_busquedas_sin_resultados` se incrementa y es la señal de usabilidad que vigila el equipo.
+
+## 6.5 Resumen de naturaleza por integración
+
+| Integración | Naturaleza | Formato | Por qué |
+|---|---|---|---|
+| Navegador → web | Síncrona | HTTPS | El estudiante ve la página |
+| web → API | Síncrona | JSON/HTTPS | Necesita el resultado en la misma interacción |
+| `busqueda` → `documentos` | Síncrona, in-process | Función Python | Ya lo fija el monolito modular (ADR 0001) |
+| API → Firestore | Síncrona | gRPC/HTTPS | La respuesta depende del dato |
+| documentos → outbox → administración | Asíncrona | Evento en proceso | Efecto secundario; no debe acoplar la disponibilidad (ADR 0015) |
+| API → administrador | Síncrona | `X-Admin-Token` | Autorización del MVP (ADR 0014) |

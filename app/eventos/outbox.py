@@ -11,7 +11,7 @@ Propiedades implementadas (una por punto del taller):
 1. Contrato: `docs/eventos/contrato-evento.md` + esquema JSON versionado.
 2. Garantía de entrega: **al menos una vez**; el consumidor debe ser idempotente.
 3. Duplicados: `ProcesadorIdempotente` descarta por `event_id`.
-4. Reintentos con espera creciente (1 s, 2 s, 4 s…) y cola de fallidos.
+4. Reintentos con espera creciente (1 s y 2 s…) y cola de fallidos.
 5. Pruebas: `tests/test_eventos.py` (duplicado y fallo recuperable).
 6. Trazabilidad: cada línea de log lleva `event_id` y `correlation_id`.
 7. Decisión: ADR 0015 frente a la alternativa síncrona.

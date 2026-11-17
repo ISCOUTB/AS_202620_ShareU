@@ -1,6 +1,6 @@
 # ADR 0004: Integración síncrona y asíncrona en ShareU
 
-* **Estado:** Propuesto
+* **Estado:** Aceptado
 * **Fecha:** septiembre de 2026
 
 ## Contexto
@@ -181,6 +181,16 @@ Se acepta el procesamiento asíncrono porque la notificación por correo es una 
 5. La implementación asíncrona deberá contemplar el manejo de mensajes pendientes y errores.
 6. Cualquier cambio de esta decisión deberá documentarse mediante una revisión de este ADR o mediante un nuevo ADR cuando la arquitectura evolucione.
 
+## Implementación actual (noviembre de 2026)
+
+- **Backend → almacenamiento (Firestore):** síncrona, con timeout de 2 s y 3 intentos con espera
+  creciente en `app/documentos/repository.py` (`_con_reintentos`). Si falla, `POST /documentos`
+  responde 503 y no hay metadatos huérfanos.
+- **Backend → consumidor de administración:** asíncrona mediante el outbox de
+  [`ADR 0015`](0015-mensajeria-asincrona-con-outbox.md) (`documento.publicado`), con entrega al
+  menos una vez, deduplicación por `event_id` y cola de fallidos. El correo sigue sin
+  implementación; el outbox es el mecanismo que se usará cuando entre en alcance.
+
 ## Criterio de reapertura
 
 Esta decisión podrá revisarse si:
@@ -193,5 +203,7 @@ Esta decisión podrá revisarse si:
 ## Referencias
 
 * [`docs/adr/0001-estilo-arquitectonico.md`](0001-estilo-arquitectonico.md)
-* [`docs/aspectos/aspectos.md`](../aspectos/aspectos.md)
-* [`docs/arc42/arc42.md`](../arc42/arc42.md)
+* [`docs/adr/0012-persistencia-en-firestore.md`](0012-persistencia-en-firestore.md)
+* [`docs/adr/0015-mensajeria-asincrona-con-outbox.md`](0015-mensajeria-asincrona-con-outbox.md)
+* [`docs/aspectos.md`](../aspectos.md)
+* [`docs/arc42/00-portada.md`](../arc42/00-portada.md)

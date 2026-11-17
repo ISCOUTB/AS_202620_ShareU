@@ -1,4 +1,11 @@
-# Correcciones — respuesta a la revisión de semana-05-corte1
+# Correcciones — respuesta a la revisión de semana 5 (corte 1)
+
+> **Documento histórico.** Responde a la revisión de septiembre de 2026 y se conserva como
+> constancia. Varias rutas que cita (`app/frontend/script.js`, `app/frontend/index.html`,
+> `docs/ia/ia.md`) ya no existen o son redirecciones: el frontend vigente es Next.js en
+> `app/frontend/` (ADR 0005) y el registro de IA canónico es [`docs/ia.md`](docs/ia.md). El estado
+> actual de la arquitectura, las decisiones y las evidencias está en [`README.md`](README.md),
+> [`docs/arc42/00-portada.md`](docs/arc42/00-portada.md) y [`docs/aspectos.md`](docs/aspectos.md).
 
 **Repositorio:** `ISCOUTB/AS_202620_ShareU`
 **Revisión que se responde:** [`revisiones/2026-2/AS_202620_ShareU/semana-05-corte1.md`](https://github.com/ISCOUTB/AS_202620_feedback/blob/master/revisiones/2026-2/AS_202620_ShareU/semana-05-corte1.md)

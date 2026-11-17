@@ -3,38 +3,49 @@ config:
   layout: elk
 ---
 C4Container
-    title ShareU — C4 Nivel 2 (contenedores)
+    title ShareU — C4 Nivel 2 (contenedores y componentes desplegables)
 
     Person(estudiante, "Estudiante", "Busca y consulta material académico")
-    Person(admin_persona, "Administrador", "Gestiona usuarios, documentos y reportes")
+    Person(administrador, "Administrador", "Publica y revisa material; usa el token administrativo")
 
-    System_Boundary(shareu, "ShareU") {
-        Container(web, "Aplicación web", "Next.js (React) en Vercel", "Interfaz de estudiantes y administradores")
-        Container(api, "API backend", "Python + FastAPI en Render", "Expone la API y compone los módulos del monolito")
-        ContainerDb(db, "Base de datos", "Firestore (Firebase, plan Spark), servicio externo", "Persiste metadatos de documentos; futuro: calificaciones, usuarios, reportes")
-        ContainerQueue(outbox, "Outbox de notificaciones", "Colección en Firestore (planificado, ADR 0004)", "Eventos de correo pendientes; entrega al menos una vez con reintentos")
-        Container(storage, "Almacenamiento de archivos", "Servicio externo", "Guarda archivos académicos")
-        Container(mail, "Servicio de correo", "SMTP/API", "Envía notificaciones")
+    ContainerDb_Ext(firestore, "Firestore", "Firebase, plan Spark", "Almacén de metadatos externo; el backend usa una cuenta de servicio. Aparece como contenedor de datos, no como caja negra")
+
+    System_Boundary(shareu, "ShareU (servidor del laboratorio, Docker/Dokploy)") {
+        Container(web, "Aplicación web", "Next.js 14 (React), contenedor web", "Interfaz de estudiantes y administradores; consume la API por HTTP/JSON")
+        Container(api, "API backend", "Python 3.11 + FastAPI, contenedor api", "Expone la API, valida, aplica seguridad y compone los módulos")
+
+        Container_Boundary(modulos, "Módulos del backend (in-process)") {
+            Container(busqueda, "Búsqueda", "Módulo busqueda", "Filtra, ordena y registra la métrica de uso")
+            Container(documentos, "Documentos", "Módulo documentos", "Metadatos, idempotencia y persistencia")
+            Container(cache, "Caché de lectura", "Memoria del proceso, TTL 60 s", "Lista pública de documentos; se invalida al escribir")
+            Container(eventos, "Outbox", "Módulo eventos, memoria del proceso", "Publica, reintenta, deduplica y acumula fallidos")
+            Container(administracion, "Administración", "Módulo administracion", "Métricas, bandeja de revisión y resolución")
+            Container(usuarios, "Usuarios", "Módulo usuarios", "Solo verificación; registro pendiente")
+            Container(calificaciones, "Calificaciones", "Módulo calificaciones", "Solo verificación; valoraciones pendientes")
+        }
     }
 
-    Container_Boundary(modulos, "Módulos del backend") {
-        Container(usuarios, "Usuarios", "Módulo", "Registro, autenticación y perfiles")
-        Container(documentos, "Documentos", "Módulo", "Clasificación y persistencia")
-        Container(busqueda, "Búsqueda", "Módulo", "Filtros y ordenamiento de resultados")
-        Container(calificaciones, "Calificaciones", "Módulo", "Valoraciones")
-        Container(administracion, "Administración", "Módulo", "Reportes, moderación y métricas")
-    }
+    Rel(estudiante, web, "Usa la interfaz", "HTTPS")
+    Rel(administrador, web, "Publica y revisa", "HTTPS")
+    Rel(web, api, "Busca y publica", "JSON/HTTPS; timeout 15 s, 1 reintento, X-Request-ID y X-Admin-Token")
+    Rel(api, busqueda, "Enruta GET /busqueda/documentos", "Llamada de función Python")
+    Rel(api, documentos, "Enruta POST /documentos y GET /documentos/cache", "Llamada de función Python")
+    Rel(api, administracion, "Enruta /administracion/*", "Llamada de función Python")
+    Rel(api, usuarios, "Enruta /usuarios/ping", "Llamada de función Python")
+    Rel(api, calificaciones, "Enruta /calificaciones/ping", "Llamada de función Python")
+    Rel(busqueda, documentos, "Pide documentos por interfaz de servicio", "Llamada de función Python")
+    Rel(busqueda, administracion, "Registra la métrica de búsqueda", "Llamada de función Python")
+    Rel(documentos, cache, "Lee y guarda la lista; invalida al escribir", "Memoria compartida del proceso")
+    Rel(documentos, firestore, "Lee y crea documentos", "gRPC/HTTPS vía firebase-admin; timeout 2 s, 3 intentos")
+    Rel(documentos, eventos, "Publica documento.publicado", "Llamada de función Python; JSON del contrato v1")
+    Rel(eventos, administracion, "Entrega el evento al consumidor", "Llamada de función Python, asíncrona tras la respuesta")
 
-    Rel(estudiante, web, "Utiliza", "HTTPS")
-    Rel(admin_persona, web, "Utiliza", "HTTPS")
-    Rel(web, api, "Consume (timeout 15 s, 1 reintento)", "JSON/HTTPS")
-    Rel(api, usuarios, "Enruta solicitudes", "función Python, in-process")
-    Rel(api, documentos, "Enruta solicitudes", "función Python, in-process")
-    Rel(api, busqueda, "Enruta solicitudes", "función Python, in-process")
-    Rel(api, calificaciones, "Enruta solicitudes", "función Python, in-process")
-    Rel(api, administracion, "Enruta solicitudes", "función Python, in-process")
-    Rel(busqueda, documentos, "Consulta mediante interfaz de servicio", "función Python, in-process")
-    Rel(documentos, db, "Lee y escribe (firebase-admin, ADR 0012)", "gRPC/HTTPS")
-    Rel(api, storage, "Guarda/recupera archivos", "REST/HTTPS, síncrono — ver ADR 0004")
-    Rel(api, outbox, "Registra el evento de notificación", "Escritura en Firestore — ver ADR 0004")
-    Rel(outbox, mail, "Entrega asíncrona con reintentos", "SMTP/API")
+    UpdateElementStyle(estudiante, $fontColor="#1e1b4b", $bgColor="#eef2ff", $borderColor="#6366f1")
+    UpdateElementStyle(administrador, $fontColor="#064e3b", $bgColor="#f0fdf4", $borderColor="#4ade80")
+    UpdateElementStyle(web, $fontColor="#164e63", $bgColor="#ecfeff", $borderColor="#22d3ee")
+    UpdateElementStyle(api, $fontColor="#581c87", $bgColor="#f5f3ff", $borderColor="#a78bfa")
+    UpdateElementStyle(firestore, $fontColor="#7c2d12", $bgColor="#fff7ed", $borderColor="#fb923c")
+    UpdateElementStyle(cache, $fontColor="#7c2d12", $bgColor="#fff7ed", $borderColor="#fb923c")
+    UpdateElementStyle(eventos, $fontColor="#831843", $bgColor="#fdf4ff", $borderColor="#e879f9")
+
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")

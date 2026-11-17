@@ -274,7 +274,7 @@ paths:
       operationId: buscarDocumentos
       summary: Busca material académico combinando filtros opcionales.
       description: >
-        Endpoint central del escenario de usabilidad (docs/aspectos/aspectos.md):
+        Endpoint central del escenario de usabilidad (docs/aspectos.md):
         todos los criterios se combinan en una sola solicitud. Todos los
         parámetros son opcionales; sin parámetros devuelve todos los
         documentos ordenados por calificación descendente.

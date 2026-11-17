@@ -1,49 +1,43 @@
-# Propiedad de datos: quién escribe qué — Semana 6
+# Propiedad de datos: quién escribe qué
 
-Regla aplicada: **cada dato tiene exactamente un módulo que escribe**; los
-demás solo leen o piden, y siempre a través de la interfaz de servicio
-pública del módulo dueño (nunca del repositorio interno).
+Regla aplicada: **cada dato tiene exactamente un módulo que escribe**; los demás solo leen o piden, y
+siempre a través de la interfaz de servicio pública del módulo dueño (nunca del repositorio interno).
 
 ## Estado actual del código
 
-| Dato / tabla | Dueño (único escritor) | Cómo escribe | Quién lee | Cómo lee | Estado |
+| Dato / colección | Dueño (único escritor) | Cómo escribe | Quién lee | Cómo lee | Estado |
 |---|---|---|---|---|---|
-| Tabla `documentos` (id, titulo, universidad, carrera, materia, tipo, autor, palabras_clave) | `documentos` | `documentos/repository.py` (SQLite) | `busqueda` | `documentos.service.obtener_documentos()` (interfaz pública) | ✅ Dueño único, acceso correcto por interfaz |
-| Columna `calificacion` (dentro de la tabla `documentos`) | `documentos` (por defecto, como dato semilla) | `documentos/repository.py` | `busqueda` | vía `documentos.service` | Dueño técnico correcto (un solo escritor), pero dueño **conceptual** equivocado: el dato pertenece al lenguaje de `calificaciones`, que no lo escribe ni lo conoce. Ver violación V1. |
-| Calificaciones de estudiantes (puntaje, autor, fecha) | *No existe tabla todavía* | — | — | — | ⚠️ El módulo `calificaciones` no tiene persistencia; solo expone `/ping` |
-| Cuentas de usuario (credenciales, perfil, rol) | *No existe tabla todavía* | — | — | — | Pendiente — módulo `usuarios` solo expone `/ping` |
-| Reportes / acciones de moderación | *No existe tabla todavía* | — | — | — | Pendiente — módulo `administracion` solo expone `/ping` |
-| Contadores de métricas de búsqueda (total, sin resultados) | `administracion` | `administracion/metricas.py` (memoria) | `busqueda` (registra), `GET /administracion/metricas` (consulta) | `administracion.service` (interfaz pública, ADR 0008) | ✅ Dueño único; el acceso pasa por la interfaz |
-| Resultados de búsqueda | Ninguno (no persiste) | n/a | Frontend (`app/frontend/script.js`) | `GET /busqueda/documentos` | ✅ Correcto: búsqueda es una proyección de solo lectura, no debe tener tabla propia |
+| Colección `documentos` (id, titulo, universidad, carrera, materia, tipo, autor, calificacion, palabras_clave, idempotency_*, creado_en) | `documentos` | `documentos/repository.py` sobre Firestore | `busqueda` | `documentos.service.obtener_documentos()` | Dueño único y acceso por interfaz |
+| Caché de lectura de documentos | `documentos` | `_CacheDocumentos.guardar` e `invalidar` | `busqueda` (indirectamente) | `documentos.service` | Derivada; se reconstruye y no es fuente de verdad |
+| Columna lógica `calificacion` | `documentos` (dato semilla) | `repository.py` | `busqueda` | `documentos.service` | Dueño técnico correcto, dueño **conceptual** equivocado (V1) |
+| Bandeja de revisión (`id_documento`, `titulo`, `materia`, `autor`, `event_id`, `correlation_id`) | `administracion` | `revision.registrar_para_revision` (consumidor) y `resolver_revision` | `GET /administracion/revision` | `administracion.service` | Dueño único; en memoria |
+| Outbox (`Evento`: `event_id`, `tipo`, `version`, `payload`, estado) | `eventos` | `eventos.publicar`, `despachar`, `reenviar` | `documentos.router` (publica), `administracion.revision` (consume), `GET /administracion/eventos` | `eventos` | Mecanismo, no dato de negocio; en memoria |
+| Contadores de métricas de búsqueda | `administracion` | `administracion/metricas.py` (memoria) | `busqueda` (registra), `GET /administracion/metricas` | `administracion.service` (ADR 0008) | Dueño único; efímero |
+| Resultados de búsqueda | Ninguno (no persiste) | n/a | Frontend (`app/frontend/lib/api.ts`) | `GET /busqueda/documentos` | Correcto: proyección de solo lectura |
+| Calificaciones de estudiantes (puntaje, autor, fecha) | *No existe* | — | — | — | El módulo solo expone `/ping` (V1) |
+| Cuentas de usuario (credenciales, perfil, rol) | *No existe* | — | — | — | El módulo solo expone `/ping` (V2) |
+| Reportes / acciones de moderación persistentes | *No existe* | — | — | — | La bandeja es efímera; no hay historial |
 
-## Regla de escritura para lo que falta por implementar
-
-Para que cuando se implementen `usuarios`, `calificaciones` y
-`administracion` no se repita la mezcla ya detectada en `documentos`, se
-fija de una vez la propiedad esperada:
+## Regla de escritura para lo que falta
 
 | Dato futuro | Dueño esperado | Quién NO debe escribirlo directamente |
 |---|---|---|
-| Cuenta / perfil de usuario | `usuarios` | `documentos` (autor), `administracion` (moderación), `calificaciones` (autor de la valoración) — todos deben pedirlo por interfaz |
-| Calificación de un documento | `calificaciones` | `documentos` — debe dejar de tener la columna `calificacion` propia (ver ADR 0003) |
-| Reporte / sanción / retiro de contenido | `administracion` | `documentos` y `usuarios` no deben marcar sus propios registros como "reportados" o "suspendidos"; exponen una operación que `administracion` invoca, y el estado resultante lo guarda quien lo pidió, no quien lo ejecuta |
+| Cuenta / perfil de usuario | `usuarios` | `documentos` (autor), `administracion` (moderación), `calificaciones` (autor) |
+| Calificación de un documento | `calificaciones` | `documentos`; debe dejar de exponer `calificacion` como valor oficial (ADR 0003) |
+| Reporte / sanción / retiro | `administracion` | `documentos` y `usuarios` no marcan sus propios registros; exponen una operación que administración invoca |
+| Historial de moderación | `administracion` | Nadie más; hoy la bandeja no se persiste |
 
 ## Cómo se verificó
 
-Se revisó cada `router.py`/`service.py`/`repository.py` del repositorio
-buscando:
-
-1. Imports que crucen de un módulo al `repository.py` de otro (las únicas
-   dependencias entre módulos son `busqueda.service` → `documentos.service` y
-   `busqueda.service` → `administracion.service`, ambas por interfaz pública;
-   `tests/test_fronteras.py` lo verifica en cada corrida).
-2. Columnas de una tabla que representen conceptos de otro dominio
-   (encontrado: `calificacion` dentro de `documentos`).
+1. Imports que crucen de un módulo al `repository.py` de otro: las únicas dependencias entre módulos
+   son `busqueda.service` → `documentos.service`, `busqueda.service` → `administracion.service`,
+   `documentos.router` → `eventos`/`seguridad` y `administracion.revision` → `eventos`. Las verifica
+   `tests/test_fronteras.py`.
+2. Columnas de una colección que representen conceptos de otro dominio: se mantiene
+   `calificacion` dentro de `documentos`, registrado como V1 con su plan.
 
 ```bash
 grep -rn "^from app\." app --include="*.py" | grep -v "app.main"
 ```
 
-Este comando confirma que el único cruce entre módulos hoy es
-`app/busqueda/service.py: from app.documentos.service import obtener_documentos`,
-que es exactamente la relación permitida por ADR 0001.
+El resultado confirma que ningún módulo importa el repositorio de otro.

@@ -10,6 +10,10 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # Se expone como variable de entorno para poder condicionar el paso:
+      # el contexto `secrets` no es fiable dentro de un `if`.
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -23,7 +27,7 @@ jobs:
           cache: "pip"
 
       - name: Instalar dependencias
-        run: python -m pip install --only-binary:all: --require-hashes -r requirements.txt
+        run: "python -m pip install --only-binary=:all: --require-hashes -r requirements.txt"
 
       - name: Ejecutar pruebas (incluye prueba de contrato)
         run: PYTHONPATH=. pytest -q --junitxml=pytest-report.xml
@@ -37,11 +41,10 @@ jobs:
           if-no-files-found: warn
 
       - name: Análisis SonarCloud
-        if: ${{ secrets.SONAR_TOKEN != '' }}
+        if: ${{ env.SONAR_TOKEN != '' }}
         uses: SonarSource/sonarcloud-github-action@383f7e52eae3ab0510c3cb0e7d9d150bbaeab838 # v3.1.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   dependencias:
     runs-on: ubuntu-latest
@@ -94,7 +97,7 @@ jobs:
           cache: "pip"
 
       - name: Instalar dependencias
-        run: python -m pip install --only-binary :all: --require-hashes -r requirements.txt
+        run: "python -m pip install --only-binary=:all: --require-hashes -r requirements.txt"
 
       - name: Medir latencia y lecturas de la búsqueda
         run: |

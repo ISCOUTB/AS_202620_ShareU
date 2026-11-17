@@ -28,12 +28,12 @@ export default function Home() {
   }
 
   useEffect(() => {
-    buscar({});
+    void buscar({});
   }, []);
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    buscar(filtros);
+    void buscar(filtros);
   }
 
   const campo = (clave: keyof Filtros, etiqueta: string) => (
