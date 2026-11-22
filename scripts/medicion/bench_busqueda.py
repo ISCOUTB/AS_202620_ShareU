@@ -328,11 +328,15 @@ def main() -> int:
     texto_md = _markdown(resultado)
 
     if args.json_out:
-        destino = _destino_seguro(args.json_out)
+        _destino_seguro(args.json_out)  # valida y falla ante una ruta no permitida
+        nombre = os.path.basename(args.json_out.replace("\\", "/"))
+        destino = DIR_MEDICIONES / nombre
         destino.parent.mkdir(parents=True, exist_ok=True)
         destino.write_text(json.dumps(resultado, indent=2, ensure_ascii=False), encoding="utf-8")
     if args.md_out:
-        destino = _destino_seguro(args.md_out)
+        _destino_seguro(args.md_out)  # valida y falla ante una ruta no permitida
+        nombre = os.path.basename(args.md_out.replace("\\", "/"))
+        destino = DIR_MEDICIONES / nombre
         destino.parent.mkdir(parents=True, exist_ok=True)
         destino.write_text(texto_md, encoding="utf-8")
 
