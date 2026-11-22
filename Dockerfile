@@ -1,6 +1,6 @@
 # API FastAPI de ShareU. Contexto de build: raíz del repositorio.
 #
-# Es el mismo contenedor que usa `Dockploy/compose.lab.yml` en el servidor del
+# Es el mismo contenedor que usa `Dockploy/compose.lab.yaml` en el servidor del
 # laboratorio. Se versiona también en la raíz para que `docker compose up`
 # funcione sin rutas especiales (README, ADR 0006).
 FROM python:3.12-slim AS base

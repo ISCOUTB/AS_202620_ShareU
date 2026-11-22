@@ -86,12 +86,14 @@ filtroTipo.addEventListener("change", aplicarFiltros);
 // 127.0.0.1:8000. Si no responde, se queda en modo ejemplo.
 // ---------------------------------------------------------------
 async function marcarModulos(activo) {
-  for (const li of modulosEls) {
-    const modulo = li.dataset.modulo;
-    if (!activo) {
+  if (!activo) {
+    for (const li of modulosEls) {
       li.classList.remove("activo", "caido");
-      continue;
     }
+    return;
+  }
+  await Promise.all([...modulosEls].map(async (li) => {
+    const modulo = li.dataset.modulo;
     try {
       const res = await fetch(`${BACKEND_URL}/${modulo}/ping`);
       li.classList.toggle("activo", res.ok);
@@ -100,7 +102,7 @@ async function marcarModulos(activo) {
       li.classList.add("caido");
       li.classList.remove("activo");
     }
-  }
+  }));
 }
 
 async function intentarConectarBackend() {
@@ -131,11 +133,11 @@ modoBtn.addEventListener("click", () => {
     modoBackend = false;
     modoBtn.textContent = "modo: ejemplo";
     estadoBackendEl.textContent = "datos de ejemplo (sin backend)";
-    marcarModulos(false);
+    void marcarModulos(false);
     poblarFiltros(documentosActuales);
     aplicarFiltros();
   } else {
-    intentarConectarBackend();
+    void intentarConectarBackend();
   }
 });
 

@@ -35,6 +35,7 @@ C4Container
     Rel(api, calificaciones, "Enruta /calificaciones/ping", "Llamada de función Python")
     Rel(busqueda, documentos, "Pide documentos por interfaz de servicio", "Llamada de función Python")
     Rel(busqueda, administracion, "Registra la métrica de búsqueda", "Llamada de función Python")
+    Rel(administracion, documentos, "Consulta estadísticas de caché por interfaz de servicio", "Llamada de función Python")
     Rel(documentos, cache, "Lee y guarda la lista; invalida al escribir", "Memoria compartida del proceso")
     Rel(documentos, firestore, "Lee y crea documentos", "gRPC/HTTPS vía firebase-admin; timeout 2 s, 3 intentos")
     Rel(documentos, eventos, "Publica documento.publicado", "Llamada de función Python; JSON del contrato v1")

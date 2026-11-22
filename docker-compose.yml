@@ -8,7 +8,7 @@
 # La API queda en http://127.0.0.1:8000 y el frontend en http://127.0.0.1:3000.
 # La base de datos es Firestore (externa); sin credenciales, la API arranca pero
 # toda lectura/escritura devuelve 503. Para el laboratorio se usa
-# `Dockploy/compose.lab.yml` (sin puertos publicados, ver ADR 0006).
+# `Dockploy/compose.lab.yaml` (sin puertos publicados, ver ADR 0006).
 
 services:
   api:

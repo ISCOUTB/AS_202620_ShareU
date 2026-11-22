@@ -21,6 +21,10 @@ app.main
 `app/main.py` es el punto de composición: monta routers, registra la suscripción al evento, agrega
 middlewares y configura el logging. No contiene lógica de dominio.
 
+El detalle de componentes del contenedor `api` —routers, servicios, repositorio, caché, outbox,
+seguridad y bandeja— está en el [C4 nivel 3](../c4/nivel-3.md), con su diagrama editable
+[`nivel3.mmd`](../c4/nivel3.mmd).
+
 ## 5.2 Responsabilidades
 
 | Bloque | Responsabilidad | Ubicación | Depende de |

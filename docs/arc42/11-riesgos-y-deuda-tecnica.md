@@ -11,9 +11,9 @@
 | R5 | Sin rate limit, la API pública puede saturarse | Media | Medio | Límite de CPU/memoria del contenedor y caché; el plan gratuito es el techo. **Aceptado** | Infraestructura |
 | R6 | La ventana entre comprobar la clave de idempotencia y crear no es atómica | Baja | Bajo | Reintento devuelve el documento; se documenta la ventana. **Aceptado** | Backend |
 | R7 | Caché fría concurrente genera lecturas extra (*stampede*) | Media | Bajo | Medido (21/300); *single-flight* queda como mejora. **Conocido** | Backend |
-| R8 | El despliegue no está verificado (HTTP 404 al 2026-11-16) | Alta | Alto para la entrega | Descriptor y healthchecks listos; verificación humana pendiente y declarada. **Abierto** | Equipo |
+| R8 | El despliegue estaba sin verificar (HTTP 404 al 2026-11-16) | Alta | Alto para la entrega | URL web y `/health` responden 200 al 2026-11-21; la búsqueda responde 500 por credenciales de Firestore ausentes. **Parcialmente mitigado**, no cerrado | Equipo |
 | R9 | Sin `node` local, el build de Next.js solo se valida en CI | Media | Medio | Lockfile actualizado a mano; CI construye. **Aceptado con verificación en CI** | Frontend |
-| R10 | SonarCloud marca el Quality Gate en **ERROR** (`new_reliability_rating=3`, `new_security_rating=3`, medido el 2026-11-17) | Alta | Medio | Los hallazgos están listados en §11.5 y en `docs/seguridad/dependencias.md`; el paso de Sonar en CI es condicional y no bloquea. **Deuda aceptada y declarada**, no se afirma un gate en verde | Equipo |
+| R10 | SonarCloud marca el Quality Gate en **ERROR** (`new_reliability_rating=3`, `new_security_rating=3`, consulta del 2026-11-21) | Alta | Medio | 33 incidencias corregidas en el árbol; el reanálisis llega con el push. El paso de Sonar es condicional y no bloquea. **Deuda declarada**, no se afirma un gate en verde | Equipo |
 
 ## 11.2 Deuda técnica declarada
 
@@ -35,7 +35,7 @@ Hallazgos recibidos en las revisiones de las semanas 9–14 y su estado **real**
 
 | # | Hallazgo | Acción tomada | Estado |
 |---|---|---|---|
-| H1 | Faltaban `Dockerfile`, descriptor de despliegue y pasos reproducibles | Se añadieron `Dockerfile`, `app/frontend/Dockerfile`, `docker-compose.yml` y `Dockploy/compose.lab.yml` con healthchecks y límites | **Cerrado en repositorio**; despliegue sin verificar |
+| H1 | Faltaban `Dockerfile`, descriptor de despliegue y pasos reproducibles | Se añadieron `Dockerfile`, `app/frontend/Dockerfile`, `docker-compose.yml` y `Dockploy/compose.lab.yaml` con healthchecks y límites | **Cerrado en repositorio**; despliegue activo, búsqueda pendiente de credenciales |
 | H2 | Brecha de ADR: no había registro de varias decisiones (persistencia, seguridad, eventos, medición) | ADR 0011–0016 creados con alternativas y consecuencias; 0004, 0008–0012 marcados como aceptados | **Cerrado** |
 | H3 | La tabla de aspectos y el registro de IA estaban en rutas no canónicas | `docs/aspectos.md` y `docs/ia.md` son la fuente; las rutas antiguas quedan como redirección | **Cerrado** |
 | H4 | arc42, C4 y README describían SQLite, Render y Vercel | Se reescribieron con Firestore, Docker/Dokploy, caché y outbox; el estado del despliegue se declara 404 | **Cerrado en documentos**; verificación de URL abierta |
@@ -44,9 +44,9 @@ Hallazgos recibidos en las revisiones de las semanas 9–14 y su estado **real**
 | H7 | El taller de mensajes podía quedar como descripción | Outbox real con contrato, deduplicación, reintentos, DLQ y pruebas | **Cerrado con código y pruebas** |
 | H8 | La bandeja de revisión exponía nombres de autores sin credencial | `X-Admin-Token` obligatorio; OpenAPI 1.3.0 con cambio incompatible anotado | **Cerrado con prueba** |
 | H9 | `next@14.2.15` estaba deprecado por seguridad | Subido a `14.2.35` en `package.json` y lockfile | **Cerrado en repositorio**; build en CI |
-| H10 | El pipeline no era auditable en el remoto | Workflow completo con JUnit, `pip-audit`, `npm audit` y medición. Los runs #44–#47 fallaron **sin jobs** porque usaban `secrets` dentro de un `if` de paso, que GitHub rechaza al validar el workflow; en la copia local el token se expone como `env` de job y la condición usa `env.SONAR_TOKEN` | **Abierto** hasta empujar la corrección y ver el run en verde |
-| H11 | SonarCloud sin evidencia de Quality Gate | Proyecto público en la organización `isco-utb`; `sonar.organization` corregido. El gate real está en **ERROR** y se declara con sus métricas | **Abierto** (deuda aceptada, ver §11.5) |
-| H12 | Las URLs desplegadas no respondían | Se declaran 404 y no se usan como evidencia; verificación pendiente | **Abierto** (acción humana) |
+| H10 | El pipeline no era auditable en el remoto | Workflow completo con JUnit, `pip-audit`, `npm audit`, medición y validación documental. Los runs #44–#47 fallaron **sin jobs** porque usaban `secrets` dentro de un `if` de paso, que GitHub rechaza al validar el workflow; en la copia local el token se expone como `env` de job y la condición usa `env.SONAR_TOKEN` | **Abierto** hasta empujar la corrección y ver el run en verde |
+| H11 | SonarCloud sin evidencia de Quality Gate | Proyecto público en la organización `isco-utb`; `sonar.organization` corregido. Las **33 incidencias abiertas** (29 del sitio legado) se corrigieron en el árbol. El gate real sigue en **ERROR** y se declara con sus métricas | **Parcial**: código corregido, reanálisis pendiente (§11.5) |
+| H12 | Las URLs desplegadas no respondían | Comprobación del 2026-11-21: `shareu.iscoutb.dev` 200 y `/health` 200; la búsqueda responde 500 por falta de credenciales y se declara | **Parcial**: disponibilidad cerrada, flujo de datos abierto |
 
 Regla adoptada: un hallazgo solo pasa a «cerrado» cuando existe el archivo, la prueba o la corrida
 que lo demuestra. Los que dependen de infraestructura o de una cuenta externa se quedan abiertos y
@@ -78,20 +78,23 @@ reapertura, están en [`docs/seguridad/amenazas.md`](../seguridad/amenazas.md):
 | T15 (retención de datos personales) | No hay datos reales de estudiantes | Antes de abrir registro |
 
 **Deuda de análisis estático.** El Quality Gate de SonarCloud está en **ERROR** con
-`new_reliability_rating=3` y `new_security_rating=3` (consulta del 2026-11-17: 44 incidencias
+`new_reliability_rating=3` y `new_security_rating=3` (consulta del 2026-11-21: 33 incidencias
 abiertas, 29 de ellas en el sitio legado `shareuwensite-main/`). Se acepta y se declara en lugar de
-ocultarla. Las correcciones locales pendientes de push son:
+ocultarla. Las 33 incidencias se corrigieron en el árbol de trabajo; el gate solo cambiará cuando se
+empuje y SonarCloud reanalice:
 
-- `docker:S8541` / `S8544` en `Dockerfile` y `Dockploy/Dockerfile.api`, y `docker:S6505` en los dos
-  Dockerfile web: instalaciones sin `--only-binary`/`--require-hashes`/`--ignore-scripts`.
-  **Corregido en repositorio**; el CI ya instalaba con esas banderas.
-- `pythonsecurity:S8703` / `S8707` en `scripts/medicion/bench_busqueda.py`: se añadieron validación
-  de URL (http/https y hosts locales salvo permiso explícito) y confinamiento de la salida a
+- `githubactions:S8544` en `.github/workflows/tests.yml`: la instalación de `pip-audit` ahora usa
+  `--only-binary=:all:`.
+- `pythonsecurity:S8703` / `S8707` en `scripts/medicion/bench_busqueda.py`: validación de URL
+  (http/https y hosts locales salvo permiso explícito) y confinamiento de la salida a
   `docs/evidencia/mediciones/`, con pruebas en `tests/test_bench_busqueda.py`.
+- `javascript:S2310` en `app/frontend/lib/api.ts`: el reintento se expresa como recursión con el
+  mismo límite, sin bucle con `await` dentro.
 - `python:S8410` en los routers de `administracion` y `documentos`: migrado a `Annotated`.
 - `typescript:S9383` en `app/frontend/app/page.tsx`: promesas marcadas con `void`.
-- Incidencias del sitio estático legado: no es el frontend canónico (ADR 0005); se recomienda
-  excluirlo en la configuración del proyecto en SonarCloud.
+- 29 incidencias del sitio estático legado: `aria-label` en los campos, `<output>` en los estados,
+  ternarios anidados resueltos, llaves en los `if`, `const` en los exports y *ping* de módulos en
+  paralelo. El sitio no es el frontend canónico (ADR 0005); aun así se corrigió en lugar de excluirlo.
 
 Dueño: equipo. Condición para cerrar: token de SonarCloud configurado, análisis automático
 desactivado a favor del scanner del workflow, correcciones empujadas y gate en verde sobre `master`.
@@ -99,5 +102,6 @@ desactivado a favor del scanner del workflow, correcciones empujadas y gate en v
 ## 11.6 Riesgo de entrega
 
 El riesgo principal del corte no es técnico: es **presentar como verificado lo que no lo está**. Por
-eso el README, §7 y esta sección repiten el estado 404, la ausencia de run remoto y los límites de
-la medición local. La sustentación puede defender lo implementado sin atribuirse lo que falta.
+eso el README, §7 y esta sección repiten el estado real del despliegue, la ausencia de run remoto
+sobre el commit de cierre y los límites de la medición local. La sustentación puede defender lo
+implementado sin atribuirse lo que falta.

@@ -3,6 +3,9 @@
 - **Estado:** Aceptado
 - **Fecha:** septiembre de 2026
 - **Aspecto relacionado:** Usabilidad
+- **Métrica reemplazada por:** [ADR 0016](0016-medicion-de-latencia-y-costo-de-lecturas.md). La
+  decisión funcional de combinar filtros en una solicitud sigue vigente; el indicador «≤ 3
+  interacciones» deja de ser la métrica del sistema y se conserva como prueba de usabilidad.
 
 ## Contexto
 

@@ -1,6 +1,7 @@
 # C4 — Nivel 2: contenedores
 
-Diagrama editable: [`nivel2.mmd`](nivel2.mmd). Nivel 1: [`nivel1.mmd`](nivel1.mmd). El diagrama
+Diagrama editable: [`nivel2.mmd`](nivel2.mmd). Nivel 1: [`nivel1.mmd`](nivel1.mmd). Nivel 3:
+[`nivel-3.md`](nivel-3.md) (componentes del contenedor `api`). El diagrama
 refleja el sistema **implementado**, no el objetivo: si algo no existe (broker, almacenamiento de
 archivos, correo), no aparece como contenedor activo.
 
@@ -34,6 +35,7 @@ app.main (composición)
   |                                          +-----> administracion.service
   +--> calificaciones.router
   +--> administracion.router -> administracion.service (métricas, revisión, eventos, caché)
+  |                                     +-----> documentos.service (estadísticas de caché)
 ```
 
 Cada módulo expone `router → service → repository`; los cruces permitidos son los que pasan por

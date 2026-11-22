@@ -17,7 +17,7 @@ que permita reproducir el despliegue, no solo un panel configurado a mano.
 
 1. El backend se empaqueta con `Dockerfile` (raíz y `Dockploy/Dockerfile.api`) sobre
    `python:3.12-slim`, con usuario sin privilegios y `HEALTHCHECK` contra `/health`.
-2. El despliegue de producción se describe en **`Dockploy/compose.lab.yml`**: dos servicios
+2. El despliegue de producción se describe en **`Dockploy/compose.lab.yaml`**: dos servicios
    (`api` y `web`), sin puertos publicados, sin bind mounts y con límites de CPU/memoria. Dokploy
    publica `api-shareu.iscoutb.dev` hacia el puerto 8000.
 3. La base de datos **no** es un contenedor: es Firestore, un servicio externo (ADR 0012).
@@ -65,13 +65,13 @@ que permita reproducir el despliegue, no solo un panel configurado a mano.
 
 ## Estado de verificación del despliegue
 
-El 2026-11-16 se consultaron `https://shareu.iscoutb.dev` y `https://api-shareu.iscoutb.dev` y
-ambos respondieron **HTTP 404**. El descriptor y el dominio están versionados, pero **el
-despliegue no se presenta como verificado**; queda como acción humana pendiente (revisar la
-aplicación en Dokploy y su dominio). Esta distinción está registrada en el README y en
-`docs/evidencia/s10-experimento.md`.
+El 2026-11-21 se comprobaron `https://shareu.iscoutb.dev` (**HTTP 200**) y
+`https://api-shareu.iscoutb.dev/health` (**HTTP 200**); `/busqueda/documentos` responde **500**
+porque la instancia no tiene credenciales de Firestore. El descriptor y el dominio están
+desplegados; el flujo de datos sigue pendiente de configuración y así se declara. El detalle con
+`X-Request-Id` está en el README y en [`docs/arc42/07`](../arc42/07-vista-de-despliegue.md) §7.3.
 
 ## Trazabilidad
 
 `docs/aspectos.md` (A3, A8) → este ADR → `Dockerfile`, `Dockploy/Dockerfile.api`,
-`Dockploy/compose.lab.yml` → `tests/test_esqueleto.py` (health) → `docs/arc42/arc42.md` §7.
+`Dockploy/compose.lab.yaml` → `tests/test_esqueleto.py` (health) → `docs/arc42/arc42.md` §7.

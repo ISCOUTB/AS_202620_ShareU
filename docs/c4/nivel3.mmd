@@ -1,0 +1,64 @@
+---
+config:
+  layout: elk
+---
+C4Component
+    title ShareU — C4 Nivel 3 (componentes del contenedor API)
+
+    Person(estudiante, "Estudiante", "Consulta material académico")
+    Person(administrador, "Administrador", "Publica y modera con token")
+
+    Container_Boundary(api, "Contenedor API · FastAPI") {
+        Component(middlewares, "Middlewares HTTP", "FastAPI", "Request-id, logging JSON, CORS y cabeceras de seguridad")
+        Component(seguridad, "Seguridad", "app/seguridad", "exigir_token_admin: fail-closed y compare_digest")
+
+        Component(r_usuarios, "Router usuarios", "app/usuarios/router.py", "GET /usuarios/ping")
+        Component(r_documentos, "Router documentos", "app/documentos/router.py", "POST /documentos, GET /documentos/cache")
+        Component(r_busqueda, "Router búsqueda", "app/busqueda/router.py", "GET /busqueda/documentos")
+        Component(r_calificaciones, "Router calificaciones", "app/calificaciones/router.py", "GET /calificaciones/ping")
+        Component(r_administracion, "Router administración", "app/administracion/router.py", "Métricas, eventos, caché y bandeja")
+
+        Component(s_documentos, "Servicio documentos", "app/documentos/service.py", "Interfaz pública del dominio documentos")
+        Component(repo_documentos, "Repositorio documentos", "app/documentos/repository.py", "Lectura, idempotencia, reserva de id y reintentos")
+        Component(cache, "Caché de lectura", "_CacheDocumentos", "Lista pública con TTL e invalidación")
+        Component(s_busqueda, "Servicio búsqueda", "app/busqueda/service.py", "Filtros combinados, orden y métrica")
+        Component(s_administracion, "Servicio administración", "app/administracion/service.py", "Fachada de métricas, revisión y eventos")
+        Component(metricas, "Métricas de búsqueda", "app/administracion/metricas.py", "Contadores en memoria")
+        Component(revision, "Bandeja de revisión", "app/administracion/revision.py", "Consumidor idempotente del evento")
+
+        Component(outbox, "Outbox en proceso", "app/eventos/outbox.py", "Publicar, despachar, reintentar, deduplicar y DLQ")
+    }
+
+    ContainerDb_Ext(firestore, "Firestore", "Firebase, plan Spark", "Metadatos de documentos")
+
+    Rel(estudiante, middlewares, "HTTPS/JSON", "GET /busqueda/documentos")
+    Rel(administrador, middlewares, "HTTPS/JSON + X-Admin-Token", "POST /documentos y /administracion/revision")
+    Rel(middlewares, r_busqueda, "Enruta", "Llamada ASGI")
+    Rel(middlewares, r_documentos, "Enruta", "Llamada ASGI")
+    Rel(middlewares, r_administracion, "Enruta", "Llamada ASGI")
+    Rel(middlewares, r_usuarios, "Enruta", "Llamada ASGI")
+    Rel(middlewares, r_calificaciones, "Enruta", "Llamada ASGI")
+
+    Rel(r_busqueda, s_busqueda, "Invoca", "Función Python")
+    Rel(s_busqueda, s_documentos, "Pide documentos", "Función Python")
+    Rel(s_busqueda, s_administracion, "Registra la métrica", "Función Python")
+    Rel(s_administracion, metricas, "Delega contadores", "Función Python")
+
+    Rel(r_documentos, seguridad, "Valida token", "Función Python")
+    Rel(r_documentos, s_documentos, "Publica metadatos", "Función Python")
+    Rel(s_documentos, repo_documentos, "Persiste y consulta", "Función Python")
+    Rel(repo_documentos, cache, "Lee, guarda e invalida", "Memoria del proceso")
+    Rel(repo_documentos, firestore, "Lee y crea con create()", "gRPC/HTTPS; timeout 2 s, 3 intentos")
+    Rel(r_documentos, outbox, "Publica documento.publicado", "Función Python; contrato v1")
+    Rel(outbox, revision, "Entrega tras la respuesta", "Función Python; al menos una vez")
+    Rel(revision, s_administracion, "Queda visible en la bandeja", "Función Python")
+    Rel(r_administracion, seguridad, "Valida token", "Función Python")
+    Rel(r_administracion, s_administracion, "Consulta y resuelve", "Función Python")
+
+    UpdateElementStyle(estudiante, $fontColor="#1e1b4b", $bgColor="#eef2ff", $borderColor="#6366f1")
+    UpdateElementStyle(administrador, $fontColor="#064e3b", $bgColor="#f0fdf4", $borderColor="#4ade80")
+    UpdateElementStyle(firestore, $fontColor="#7c2d12", $bgColor="#fff7ed", $borderColor="#fb923c")
+    UpdateElementStyle(cache, $fontColor="#7c2d12", $bgColor="#fff7ed", $borderColor="#fb923c")
+    UpdateElementStyle(outbox, $fontColor="#831843", $bgColor="#fdf4ff", $borderColor="#e879f9")
+
+    UpdateLayoutConfig($c4ShapeInRow="4", $c4BoundaryInRow="1")

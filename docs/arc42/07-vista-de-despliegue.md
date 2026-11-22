@@ -8,14 +8,14 @@
 | `web` | Contenedor Docker en el mismo servidor | Next.js; imagen `app/frontend/Dockerfile` | `https://shareu.iscoutb.dev` (puerto interno 3000) |
 | Firestore | Google Cloud (externo) | Firestore, plan Spark | No expuesto; solo la cuenta de servicio |
 | CI/CD | GitHub Actions | `pytest`, contrato, dependencias, medición, SonarCloud condicional | `.github/workflows/tests.yml` |
-| Descriptor de despliegue | `Dockploy/compose.lab.yml` | Docker Compose sin `ports`, sin bind mounts, con límites y healthchecks | Dokploy |
+| Descriptor de despliegue | `Dockploy/compose.lab.yaml` | Docker Compose sin `ports`, sin bind mounts, con límites y healthchecks | Dokploy |
 
 ```text
 GitHub (push a master)
    |
    +--> GitHub Actions: pytest + contrato + pip-audit + npm audit + medición
    |
-   +--> Dokploy: docker compose -f Dockploy/compose.lab.yml up -d --build
+   +--> Dokploy: docker compose -f Dockploy/compose.lab.yaml up -d --build
             |
             +--> contenedor api  ---gRPC/HTTPS---> Firestore (externo)
             +--> contenedor web  ---JSON/HTTPS---> api
@@ -35,16 +35,19 @@ GitHub (push a master)
 
 ## 7.3 Estado de verificación (honesto)
 
-| URL | Estado al 2026-11-16 | Qué se afirma |
-|---|---|---|
-| `https://shareu.iscoutb.dev` | HTTP 404 | **No verificado**: el despliegue no se presenta como activo |
-| `https://api-shareu.iscoutb.dev` | HTTP 404 | **No verificado**: `/health` no se pudo comprobar desde una red externa |
+Comprobación con `curl` el **2026-11-21T22:19:51Z**:
 
-El repositorio contiene el descriptor y las instrucciones, pero **no** una captura o un enlace que
-demuestre que el servicio responde. La verificación es una acción humana pendiente: desplegar en
-Dokploy, comprobar `/health` y las dos URLs, y actualizar esta tabla y el README con el resultado.
-Las mediciones de rendimiento se hicieron en local/ASGI (`docs/evidencia/mediciones/`) y no se
-extrapolan al servidor.
+| URL | Estado | Qué se afirma |
+|---|---|---|
+| `https://shareu.iscoutb.dev` | HTTP **200** | Interfaz Next.js servida; título «ShareU — material académico compartido» |
+| `https://api-shareu.iscoutb.dev/health` | HTTP **200** | `{"estado":"ok"}`, `X-Request-Id: c06483a8-f901-42fc-9cbf-e7d17baf44a7` |
+| `https://api-shareu.iscoutb.dev/busqueda/documentos` | HTTP **500** | La instancia no tiene credenciales de Firestore; **no** se presenta como flujo verificado |
+| `https://api-shareu.iscoutb.dev/administracion/revision` | HTTP **503** | Fail-closed por falta de `SHAREU_ADMIN_TOKEN` |
+
+Los cinco `/ping` de módulo responden 200 y una ruta inexistente devuelve 404. Lo que falta es
+**configuración**, no código: cargar `FIREBASE_CREDENTIALS_JSON` y `SHAREU_ADMIN_TOKEN` en Dokploy,
+redesplegar el 503 de búsqueda y repetir esta tabla. Las mediciones de rendimiento se hicieron en
+local/ASGI (`docs/evidencia/mediciones/`) y no se extrapolan al servidor.
 
 ## 7.4 Entorno local
 

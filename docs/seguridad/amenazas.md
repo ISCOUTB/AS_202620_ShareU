@@ -75,7 +75,10 @@ abrir el registro.
 - `tests/test_bench_busqueda.py`: el banco de medición rechaza esquemas no HTTP, hosts externos sin
   permiso explícito y rutas de salida fuera de `docs/evidencia/mediciones/` (T9/T11 y S8703/S8707).
 - Barrido de secretos con `git grep -nIiE '(api[_-]?key|secret|passw(or)?d|token|bearer|BEGIN (RSA|OPENSSH|PRIVATE)|ghp_|sk-)'`:
-  solo aparecen nombres de variables y `secrets.GITHUB_TOKEN` / `secrets.SONAR_TOKEN` en el workflow.
+  no aparecen claves privadas, tokens ni `.env`. Sí aparece `apiKey` en
+  `shareuwensite-main/firebase-config.js`: es la **configuración web** de Firebase, pública por
+  diseño y sin permiso propio sobre Firestore; la barrera real son las reglas del proyecto y la
+  restricción de la clave por *referrer*, que queda como acción pendiente en Google Cloud.
 - `pip-audit` limpio; `npm audit` y Dependabot en CI (ver [`dependencias.md`](dependencias.md)).
 
 ## 6. Trazabilidad

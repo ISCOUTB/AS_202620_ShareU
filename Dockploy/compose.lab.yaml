@@ -1,7 +1,7 @@
-# Dockploy/compose.lab.yml — ShareU en el servidor del laboratorio.
+# Dockploy/compose.lab.yaml — ShareU en el servidor del laboratorio.
 #
 # Dokploy lo despliega en cada push a master con:
-#   docker compose -p <app> --env-file Dockploy/.env -f Dockploy/compose.lab.yml up -d --build
+#   docker compose -p <app> --env-file Dockploy/.env -f Dockploy/compose.lab.yaml up -d --build
 # Las rutas relativas de `build.context` se resuelven desde esta carpeta
 # (Dockploy/), y `dockerfile` se resuelve desde el contexto de build.
 #

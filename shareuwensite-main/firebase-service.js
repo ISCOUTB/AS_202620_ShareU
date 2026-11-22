@@ -1,15 +1,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, serverTimestamp, limit, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { firebaseConfig, isFirebaseConfigured } from "./firebase-config.js";
 
-let app, auth, db;
-if (isFirebaseConfigured) {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
-}
-export { auth, db, isFirebaseConfigured, onAuthStateChanged, signOut };
+export { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+const app = isFirebaseConfigured ? initializeApp(firebaseConfig) : null;
+const auth = app ? getAuth(app) : null;
+const db = app ? getFirestore(app) : null;
+export { auth, db, isFirebaseConfigured };
 
 export async function registerUser({ name, email, password, university = "", career = "" }) {
   const credential = await createUserWithEmailAndPassword(auth, email, password);
@@ -28,11 +27,13 @@ export async function getUserProfile(uid) {
   return snapshot.exists() ? snapshot.data() : null;
 }
 const mapDocs = snapshot => snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
+function timeOf(value) {
+  if (value?.toMillis) return value.toMillis();
+  if (value instanceof Date) return value.getTime();
+  return 0;
+}
 function newestFirst(items) {
-  return items.sort((a, b) => {
-    const time = value => value?.toMillis ? value.toMillis() : (value instanceof Date ? value.getTime() : 0);
-    return time(b.createdAt) - time(a.createdAt);
-  });
+  return items.sort((a, b) => timeOf(b.createdAt) - timeOf(a.createdAt));
 }
 
 // ShareU stores academic contributions as text and metadata only; no file uploads or Storage dependency.

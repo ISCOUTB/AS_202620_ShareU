@@ -31,6 +31,7 @@ import json
 import logging
 import os
 import platform
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -44,6 +45,8 @@ HOSTS_LOCALES = {"127.0.0.1", "localhost", "::1"}
 UMBRAL_P95_MS = 500.0
 UMBRAL_ERROR = 0.01
 UMBRAL_LECTURAS_POR_BUSQUEDA = 0.1
+# Nombre de artefacto permitido: sin separadores ni `..`, solo un archivo .json/.md.
+PATRON_ARTEFACTO = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*\.(?:json|md)$")
 
 
 def _url_medible(url: str) -> str:
@@ -67,11 +70,26 @@ def _url_medible(url: str) -> str:
 def _destino_seguro(ruta: str) -> Path:
     """Restringe los artefactos de salida a `docs/evidencia/mediciones`.
 
-    Evita que un argumento con `..` o una ruta absoluta escriba fuera del
-    repositorio (S8707, S13).
+    Solo se acepta un nombre de archivo simple (sin `..`) que cumpla
+    `PATRON_ARTEFACTO`, opcionalmente precedido por el directorio de mediciones.
+    El destino se construye a partir de la constante `DIR_MEDICIONES`, de modo
+    que el argumento no puede escapar del directorio permitido (S8707, S13).
     """
-    destino = (RAIZ / ruta).resolve()
-    if not destino.is_relative_to(DIR_MEDICIONES):
+    normalizada = ruta.replace("\\", "/")
+    partes = Path(normalizada)
+    nombre = partes.name
+    directorios_permitidos = {Path("."), Path("docs/evidencia/mediciones")}
+    if (
+        not PATRON_ARTEFACTO.fullmatch(nombre)
+        or ".." in partes.parts
+        or partes.parent not in directorios_permitidos
+    ):
+        raise SystemExit(
+            "La ruta de salida debe ser un archivo .json o .md dentro de "
+            f"docs/evidencia/mediciones (sin '..'): {ruta}"
+        )
+    destino = DIR_MEDICIONES / nombre
+    if not destino.resolve().is_relative_to(DIR_MEDICIONES.resolve()):
         raise SystemExit(
             f"La ruta de salida debe quedar dentro de {DIR_MEDICIONES}: {ruta}"
         )

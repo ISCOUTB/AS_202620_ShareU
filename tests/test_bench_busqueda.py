@@ -38,7 +38,15 @@ def test_salida_dentro_de_mediciones_se_acepta():
 
 @pytest.mark.parametrize(
     "ruta",
-    ["../fuera.json", "docs/evidencia/otro.json", "docs/evidencia/mediciones/../../x.md"],
+    [
+        "../fuera.json",
+        "docs/evidencia/otro.json",
+        "docs/evidencia/mediciones/../../x.md",
+        "/etc/passwd.json",
+        "C:/Windows/x.json",
+        "docs/evidencia/mediciones/x.txt",
+        "docs/evidencia/mediciones/.oculto.json",
+    ],
 )
 def test_salida_fuera_de_mediciones_se_rechaza(ruta):
     with pytest.raises(SystemExit):

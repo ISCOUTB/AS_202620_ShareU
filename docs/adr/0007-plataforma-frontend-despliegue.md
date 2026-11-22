@@ -16,7 +16,7 @@ fija la URL de la API en el build y cómo se sirve el resultado.
 
 1. El frontend se construye con `Dockploy/Dockerfile.web` (equivalente en
    `app/frontend/Dockerfile`) y se ejecuta con `next start` en el puerto 3000.
-2. Se despliega como servicio `web` en `Dockploy/compose.lab.yml`, detrás del dominio
+2. Se despliega como servicio `web` en `Dockploy/compose.lab.yaml`, detrás del dominio
    `shareu.iscoutb.dev`, con 192 MB de memoria y health check HTTP.
 3. `NEXT_PUBLIC_API_URL=https://api-shareu.iscoutb.dev` se pasa como **build arg**: Next.js
    incrusta las variables `NEXT_PUBLIC_*` en el bundle, así que cambiarla exige reconstruir la
@@ -56,10 +56,11 @@ fija la URL de la API en el build y cómo se sirve el resultado.
 
 ## Estado de verificación
 
-El 2026-11-16 `https://shareu.iscoutb.dev` respondió **HTTP 404**. El descriptor existe, pero el
-despliegue no se marca como verificado; es una acción humana pendiente.
+El 2026-11-21 `https://shareu.iscoutb.dev` respondió **HTTP 200** y sirve la interfaz Next.js. El
+flujo de datos de la API está declarado como pendiente en [`docs/arc42/07`](../arc42/07-vista-de-despliegue.md)
+§7.3 porque la búsqueda responde 500 por falta de credenciales de Firestore.
 
 ## Trazabilidad
 
 `docs/aspectos.md` (A1, A7, A8) → este ADR → `Dockploy/Dockerfile.web`,
-`app/frontend/Dockerfile`, `Dockploy/compose.lab.yml` → `docs/c4/nivel-2.md` → README.
+`app/frontend/Dockerfile`, `Dockploy/compose.lab.yaml` → `docs/c4/nivel-2.md` → README.

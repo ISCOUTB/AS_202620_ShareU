@@ -28,9 +28,9 @@ limitación del resolvedor frente a un archivo de hashes. La auditoría se hace 
 | D4 | Dependencias de prueba (`pytest`, `httpx`) dentro del mismo `requirements.in` que runtime | Revisión manual | Se mantiene un solo archivo para que CI y Docker instalen lo mismo; separar runtime/test queda como mejora declarada | **Aceptado; mejora pendiente** |
 | D5 | Sin SBOM | Revisión S13 | Se declara como trabajo futuro; `requirements.txt` con hashes y el lockfile de npm son el inventario actual | **Pendiente, aceptado** |
 | D6 | SonarCloud marca instalaciones sin `--only-binary`/`--ignore-scripts` en los `Dockerfile` | Análisis estático (`docker:S8541`, `S8544`, `S6505`) | Corregido: `pip install --only-binary=:all: --require-hashes` en `Dockerfile` y `Dockploy/Dockerfile.api`; `npm ci --ignore-scripts` en ambos Dockerfile web | **Corregido en repositorio**; requiere push y nuevo análisis |
-| D7 | SonarCloud marca lectura de rutas y peticiones en `scripts/medicion/bench_busqueda.py` (`S8703`, `S8707`) | Análisis estático | Se añadieron `_url_medible` (solo http/https y hosts locales salvo `SHAREU_BENCH_PERMITIR_REMOTO=1`) y `_destino_seguro` (salida confinada a `docs/evidencia/mediciones`), con pruebas en `tests/test_bench_busqueda.py` | **Mitigado en repositorio**; el hallazgo previo persiste hasta el próximo análisis |
+| D7 | SonarCloud marca lectura de rutas y peticiones en `scripts/medicion/bench_busqueda.py` (`S8703`, `S8707`) | Análisis estático | Se añadieron `_url_medible` (solo http/https y hosts locales salvo `SHAREU_BENCH_PERMITIR_REMOTO=1`) y `_destino_seguro` (nombre simple, extensión `.json`/`.md` y salida confinada a `docs/evidencia/mediciones`), con pruebas en `tests/test_bench_busqueda.py` | **Corregido en repositorio y validado en local**; el reanálisis llega con el push |
 | D8 | SonarCloud marca `Depends`/`Header` en la firma de un endpoint (`python:S8410`) | Análisis estático | Se migraron las cabeceras de `administracion/router.py` y `documentos/router.py` a `Annotated` | **Corregido en repositorio**; requiere nuevo análisis |
-| D9 | SonarCloud analiza `shareuwensite-main/`, el sitio estático legado (29 de 44 incidencias) | Análisis estático | No es el frontend canónico (ADR 0005). Se declara la deuda y se recomienda excluirlo en la configuración del proyecto en SonarCloud; el análisis automático no lee `sonar-project.properties` | **Deuda aceptada** (acción humana en la consola de SonarCloud) |
+| D9 | SonarCloud analiza `shareuwensite-main/`, el sitio estático legado (29 de 33 incidencias) | Análisis estático | No es el frontend canónico (ADR 0005). Se corrigieron sus 29 incidencias en el árbol (accesibilidad, ternarios y exports) en lugar de excluirlo; sigue siendo legado no desplegado | **Corregido en repositorio**; requiere push y nuevo análisis |
 
 ## 4. Reglas del equipo
 
@@ -52,15 +52,17 @@ No known vulnerabilities found
 ```
 
 El resultado local no sustituye al de CI: el pipeline es la fuente de verdad y su estado se
-consulta en la pestaña *Actions*. Al 2026-11-17 los runs #44–#47 fallaron **sin jobs** porque el
+consulta en la pestaña *Actions*. Al 2026-11-21 los runs #44–#47 fallaron **sin jobs** porque el
 workflow usaba `secrets` dentro de un `if` de paso, algo que GitHub rechaza al validar el archivo.
-La corrección (token como `env` de job y condición sobre `env.SONAR_TOKEN`) está en la copia local y
-pendiente de push. Por eso este documento no afirma que el pipeline esté en verde.
+La corrección (token como `env` de job y condición sobre `env.SONAR_TOKEN`), junto con el paso
+`scripts/validar_docs.py`, está en el árbol de trabajo y pendiente de push. Por eso este documento no
+afirma que el pipeline esté en verde.
 
 El **Quality Gate de SonarCloud está en ERROR** (`new_reliability_rating=3`,
-`new_security_rating=3`, 44 incidencias abiertas, consultado el 2026-11-17). No se oculta: los
-hallazgos están clasificados en la tabla D6–D9 y en
-[`../arc42/11-riesgos-y-deuda-tecnica.md`](../arc42/11-riesgos-y-deuda-tecnica.md) §11.5.
+`new_security_rating=3`, **33 incidencias abiertas**, consultado el 2026-11-21; 29 en el sitio
+legado). Las 33 se corrigieron en el árbol. No se oculta: los hallazgos están clasificados en la
+tabla D6–D9 y en [`../arc42/11-riesgos-y-deuda-tecnica.md`](../arc42/11-riesgos-y-deuda-tecnica.md)
+§11.5.
 
 ## 6. Trazabilidad
 

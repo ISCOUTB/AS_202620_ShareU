@@ -21,7 +21,9 @@ title: "Documentación de arquitectura ShareU — arc42"
 | [12. Glosario](12-glosario.md) | Términos del dominio y de arquitectura |
 
 Documentos de apoyo: [`../aspectos.md`](../aspectos.md) (trazabilidad de aspectos),
-[`../c4/nivel-2.md`](../c4/nivel-2.md) (contenedores), [`../datos/consistencia.md`](../datos/consistencia.md),
+[`../c4/nivel-2.md`](../c4/nivel-2.md) (contenedores), [`../c4/nivel-3.md`](../c4/nivel-3.md)
+(componentes del API), [`../datos/consistencia.md`](../datos/consistencia.md),
 [`../eventos/contrato-evento.md`](../eventos/contrato-evento.md),
 [`../seguridad/amenazas.md`](../seguridad/amenazas.md),
-[`../resiliencia/modos-de-fallo.md`](../resiliencia/modos-de-fallo.md), [`../ia.md`](../ia.md).
+[`../resiliencia/modos-de-fallo.md`](../resiliencia/modos-de-fallo.md), [`../ia.md`](../ia.md),
+[`../entrega/s17-matriz-retroalimentacion.md`](../entrega/s17-matriz-retroalimentacion.md).

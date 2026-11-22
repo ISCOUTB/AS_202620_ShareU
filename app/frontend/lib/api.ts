@@ -37,16 +37,15 @@ async function pedirConTimeout(url: string): Promise<Response> {
 }
 
 // Reintenta solo ante error de red, timeout o 5xx. Un 4xx no se reintenta.
-async function pedirConReintento(url: string): Promise<Response> {
-  for (let intento = 0; ; intento++) {
-    try {
-      const res = await pedirConTimeout(url);
-      if (res.status < 500 || intento >= REINTENTOS) return res;
-    } catch (error) {
-      if (intento >= REINTENTOS) throw error;
-    }
-    await new Promise((resolver) => setTimeout(resolver, ESPERA_MS));
+async function pedirConReintento(url: string, intento = 0): Promise<Response> {
+  try {
+    const res = await pedirConTimeout(url);
+    if (res.status < 500 || intento >= REINTENTOS) return res;
+  } catch (error) {
+    if (intento >= REINTENTOS) throw error;
   }
+  await new Promise((resolver) => setTimeout(resolver, ESPERA_MS));
+  return pedirConReintento(url, intento + 1);
 }
 
 // Una sola solicitud con todos los filtros (ADR 0002): cumple el presupuesto de <=3 interacciones.

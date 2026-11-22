@@ -32,6 +32,9 @@ jobs:
       - name: Ejecutar pruebas (incluye prueba de contrato)
         run: PYTHONPATH=. pytest -q --junitxml=pytest-report.xml
 
+      - name: Validar documentación (rutas, enlaces, ADR y aspectos)
+        run: python scripts/validar_docs.py --verbose
+
       - name: Publicar reporte JUnit
         if: always()
         uses: actions/upload-artifact@v4
@@ -59,7 +62,7 @@ jobs:
 
       - name: Auditar dependencias Python (pip-audit)
         run: |
-          python -m pip install pip-audit==2.9.0
+          python -m pip install --only-binary=:all: pip-audit==2.9.0
           python -m pip_audit -r requirements.in --progress-spinner off
 
       - name: Configurar Node

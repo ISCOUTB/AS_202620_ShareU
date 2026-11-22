@@ -28,8 +28,10 @@ Artefactos: [`s10-linea-base-sin-cache.md`](../evidencia/mediciones/s10-linea-ba
 JSON. La línea base se obtiene con `--sin-cache`, sin cambiar el código.
 
 **Límite de validez:** el modo ASGI no incluye red ni Firestore reales; el número es un **límite
-inferior** y no se extrapola al servidor del laboratorio. La corrida con `--url` queda pendiente
-mientras el despliegue responda 404.
+inferior** y no se extrapola al servidor del laboratorio. Al 2026-11-21 el despliegue está activo
+(web 200, `/health` 200) pero su búsqueda responde 500 porque la instancia no tiene configurada la
+persistencia; la corrida con `--url` sigue pendiente y no se presenta como rendimiento del
+despliegue (S17, `DOC-11`).
 
 ## 10.3 Otros escenarios medibles
 

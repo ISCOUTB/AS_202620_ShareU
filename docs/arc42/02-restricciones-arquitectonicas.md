@@ -5,7 +5,7 @@
 | R1 | Backend en **Python + FastAPI** | Módulos, routers, Pydantic y `pytest` como base | ADR 0001 |
 | R2 | Frontend en **Next.js (React)** | Consumo por HTTP/JSON; sin lógica de negocio en el cliente | ADR 0005 |
 | R3 | **Costo USD 0/mes y sin tarjeta** | Render/Vercel pagos, brokers gestionados y bases con tarjeta quedan fuera | `docs/costos/estimacion-costo.md`, ADR 0006, ADR 0007 |
-| R4 | Despliegue en el **servidor del laboratorio con Dokploy y Docker** | Dos contenedores (`api`, `web`) descritos en `Dockploy/compose.lab.yml`; sin `ports`, sin bind mounts, sin `container_name`, con límites de CPU/memoria | ADR 0006, ADR 0007 |
+| R4 | Despliegue en el **servidor del laboratorio con Dokploy y Docker** | Dos contenedores (`api`, `web`) descritos en `Dockploy/compose.lab.yaml`; sin `ports`, sin bind mounts, sin `container_name`, con límites de CPU/memoria | ADR 0006, ADR 0007 |
 | R5 | Persistencia en **Firestore (plan Spark)** | El backend usa una cuenta de servicio; no hay SQL ni disco local como fuente de verdad | ADR 0012 |
 | R6 | **Una sola instancia** del backend | Caché y outbox en memoria son aceptables; no hay coordinación entre réplicas | ADR 0013, ADR 0015 |
 | R7 | Los cinco dominios conservan **fronteras explícitas** | Un módulo no importa el repositorio de otro; el cableado vive en `app/main.py` | ADR 0001, `tests/test_fronteras.py` |

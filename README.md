@@ -3,9 +3,10 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ISCOUTB_AS_202620_ShareU&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ISCOUTB_AS_202620_ShareU)
 
 > El *badge* refleja el estado real del proyecto público en SonarCloud (organización `isco-utb`).
-> Al 2026-11-17 el gate está en **ERROR** (`new_reliability_rating=3`, `new_security_rating=3`) por
-> 44 incidencias abiertas; no se oculta ni se presenta como verde. El detalle y la condición para
-> cerrarlo están en [`docs/arc42/11-riesgos-y-deuda-tecnica.md`](docs/arc42/11-riesgos-y-deuda-tecnica.md) §11.5.
+> Al 2026-11-21 el gate está en **ERROR** (`new_reliability_rating=3`, `new_security_rating=3`) por
+> 33 incidencias abiertas; las 33 se corrigieron en el árbol y el análisis se repetirá al empujar.
+> No se oculta ni se presenta como verde. El detalle y la condición para cerrarlo están en
+> [`docs/arc42/11-riesgos-y-deuda-tecnica.md`](docs/arc42/11-riesgos-y-deuda-tecnica.md) §11.5.
 
 ShareU es una plataforma web para **compartir y encontrar material académico** organizado por
 universidad, carrera y materia: apuntes, ejercicios, talleres, parciales y guías.
@@ -107,7 +108,14 @@ pytest -q
 No requieren credenciales: usan un Firestore falso (`tests/firestore_falso.py`). Cubren contrato,
 fronteras, búsqueda, usabilidad, caché, idempotencia, eventos, resiliencia y seguridad. El workflow
 [`.github/workflows/tests.yml`](.github/workflows/tests.yml) ejecuta además `pip-audit`, `npm audit`,
-la medición y SonarCloud cuando hay token.
+la medición, SonarCloud cuando hay token y la validación de la documentación.
+
+```bash
+python scripts/validar_docs.py --verbose
+```
+
+Ese validador comprueba rutas obligatorias, nombres de ADR, enlaces locales, las ocho columnas de
+`docs/aspectos.md` y ausencia de marcadores de plantilla. `tests/test_docs.py` lo integra en `pytest`.
 
 ## Medición de rendimiento y costo
 
@@ -138,14 +146,21 @@ esa carpeta se rechaza.
 
 ## Estado del despliegue (honesto)
 
-| URL | Estado al 2026-11-16 |
-|---|---|
-| <https://shareu.iscoutb.dev> | **HTTP 404 — no verificado** |
-| <https://api-shareu.iscoutb.dev> | **HTTP 404 — no verificado** |
+Comprobación con `curl` el **2026-11-21T22:19:51Z**:
 
-El descriptor `Dockploy/compose.lab.yml` y los Dockerfile están listos, pero **no** se afirma que el
-servicio esté activo. Verificarlo —desplegar, comprobar `/health` y actualizar esta tabla— es una
-acción humana pendiente.
+| URL | Estado | Evidencia |
+|---|---|---|
+| <https://shareu.iscoutb.dev> | **HTTP 200** · interfaz Next.js servida | Título «ShareU — material académico compartido» |
+| <https://api-shareu.iscoutb.dev/health> | **HTTP 200** · `{"estado":"ok"}` | `X-Request-Id: c06483a8-f901-42fc-9cbf-e7d17baf44a7` |
+| <https://api-shareu.iscoutb.dev/busqueda/documentos> | **HTTP 500** | `X-Request-Id: 51a879a9-c134-4358-bc48-f8b5b8ad6fde` |
+| Ruta inexistente | **HTTP 404** | `X-Request-Id: f464903f-8080-41b5-97fd-53be11cd6fe0` |
+| `/administracion/revision` sin token | **HTTP 503** fail-closed | `X-Request-Id: 2b62efee-bfa6-4458-80fa-82be44132a63` |
+
+Los cinco `/ping` de módulo responden 200. **La búsqueda no funciona en el despliegue** porque la
+instancia no tiene configurada la persistencia de Firestore; es una no conformidad de configuración,
+no se presenta como flujo verificado. El código ya traduce ese fallo a **503** controlado
+(`app/busqueda/router.py`), pero el cambio requiere redespliegue. Condición de cierre: cargar
+`FIREBASE_CREDENTIALS_JSON` y `SHAREU_ADMIN_TOKEN` en Dokploy y repetir esta tabla.
 
 ## Arquitectura
 
@@ -171,16 +186,17 @@ Navegador -> Next.js -> FastAPI -> Firestore
 | Documento | Contenido |
 |---|---|
 | [arc42](docs/arc42/00-portada.md) | Arquitectura completa, §1–§12 |
-| [C4 nivel 1](docs/c4/nivel1.mmd) / [nivel 2](docs/c4/nivel-2.md) | Contexto y contenedores ([editable](docs/c4/nivel2.mmd)) |
+| [C4 nivel 1](docs/c4/nivel1.mmd) / [nivel 2](docs/c4/nivel-2.md) / [nivel 3](docs/c4/nivel-3.md) | Contexto, contenedores y componentes del API ([editable](docs/c4/nivel3.mmd)) |
 | [Aspectos y trazabilidad](docs/aspectos.md) | Tabla de 8 columnas: requisito → C4 → ADR → código → pruebas → evidencia |
 | [ADR](docs/adr/) | 16 decisiones con alternativas y consecuencias |
-| [Contrato OpenAPI](docs/api/openapi.yaml) | Fuente de verdad de la API (v1.3.0) |
+| [Contrato OpenAPI](docs/api/openapi.yaml) | Fuente de verdad de la API (v1.3.1) |
 | [Consistencia y caché](docs/datos/consistencia.md) | Operación → garantía |
 | [Contrato del evento](docs/eventos/contrato-evento.md) / [límites](docs/eventos/limites.md) | Mensajería |
 | [Modos de fallo](docs/resiliencia/modos-de-fallo.md) | No responde / tarde / dos veces, idempotencia y saga |
 | [Amenazas](docs/seguridad/amenazas.md) / [dependencias](docs/seguridad/dependencias.md) | STRIDE, privacidad y cadena de suministro |
 | [Costos](docs/costos/estimacion-costo.md) | USD 0/mes y puntos de ruptura |
 | [Evidencia S10–S14](docs/evidencia/) | Informes y mediciones |
+| [Entrega S16](docs/entrega/final-guia-tres-paginas.md) / [S17](docs/entrega/s17-matriz-retroalimentacion.md) | Guía final y matriz de retroalimentación |
 | [Resúmenes de entrega](docs/entrega/) | Dos páginas S10 y una página S11–S14 |
 | [Uso de IA](docs/ia.md) | Registro por semana con rechazos y revisión |
 | [DDD](docs/ddd/contextos.md) | Contextos, propiedad de datos y auditoría |
@@ -192,7 +208,8 @@ Navegador -> Next.js -> FastAPI -> Firestore
 - La caché y el outbox viven en memoria: una instancia, sin durabilidad (ADR 0013/0015).
 - No hay *single-flight*: la caché fría concurrente genera lecturas extra.
 - Sin rate limit; el límite de CPU/memoria del contenedor es el techo.
-- El despliegue y el pipeline remoto no están verificados; se declaran abiertos.
+- El despliegue está activo (web y `/health` en 200), pero su búsqueda responde 500 por falta de
+  credenciales de Firestore; el pipeline del commit de cierre aún no se ha ejecutado.
 
 Todas las limitaciones y su criterio de reapertura están en
 [arc42 §11](docs/arc42/11-riesgos-y-deuda-tecnica.md).

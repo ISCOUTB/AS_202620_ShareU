@@ -52,7 +52,7 @@ semestre no se acerca.
 ## 5. Punto de ruptura del despliegue
 
 El servidor del laboratorio es el supuesto más frágil: no lo controla el equipo. Si deja de estar
-disponible, el mismo `Dockploy/compose.lab.yml` se puede llevar a otro servidor con Docker, pero
+disponible, el mismo `Dockploy/compose.lab.yaml` se puede llevar a otro servidor con Docker, pero
 dejaría de ser gratuito. Esa es la razón por la que el descriptor no depende de un proveedor
 concreto y las URLs se declaran no verificadas mientras respondan 404.
 
