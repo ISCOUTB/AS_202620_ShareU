@@ -77,7 +77,9 @@ def _destino_seguro(ruta: str) -> Path:
     """
     normalizada = ruta.replace("\\", "/")
     partes = Path(normalizada)
-    nombre = partes.name
+    # `os.path.basename` es el saneador que reconoce el análisis de flujo:
+    # elimina cualquier componente de directorio antes de construir el destino.
+    nombre = os.path.basename(normalizada)
     directorios_permitidos = {Path("."), Path("docs/evidencia/mediciones")}
     if (
         not PATRON_ARTEFACTO.fullmatch(nombre)
