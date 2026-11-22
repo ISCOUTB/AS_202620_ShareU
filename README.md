@@ -3,10 +3,10 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ISCOUTB_AS_202620_ShareU&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ISCOUTB_AS_202620_ShareU)
 
 > El *badge* refleja el estado real del proyecto público en SonarCloud (organización `isco-utb`).
-> Al 2026-11-21 el gate está en **ERROR** (`new_reliability_rating=3`, `new_security_rating=3`) por
-> 33 incidencias abiertas; las 33 se corrigieron en el árbol y el análisis se repetirá al empujar.
-> No se oculta ni se presenta como verde. El detalle y la condición para cerrarlo están en
-> [`docs/arc42/11-riesgos-y-deuda-tecnica.md`](docs/arc42/11-riesgos-y-deuda-tecnica.md) §11.5.
+> Al 2026-11-21, sobre el commit `75bc601`, el análisis reporta **0 incidencias abiertas** y el
+> **Quality Gate en OK** (`new_reliability_rating=1`, `new_security_rating=1`,
+> `new_maintainability_rating=1`, 100 % de *hotspots* revisados). El detalle y el historial de la
+> deuda cerrada están en [`docs/arc42/11-riesgos-y-deuda-tecnica.md`](docs/arc42/11-riesgos-y-deuda-tecnica.md) §11.5.
 
 ShareU es una plataforma web para **compartir y encontrar material académico** organizado por
 universidad, carrera y materia: apuntes, ejercicios, talleres, parciales y guías.

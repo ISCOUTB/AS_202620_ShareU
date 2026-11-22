@@ -35,6 +35,6 @@
 | **Dokploy** | Plataforma de despliegue del laboratorio basada en Docker Compose |
 | **Healthcheck** | Comprobación periódica de `/health` para reiniciar un contenedor enfermo |
 | **`request_id`** | Identificador por solicitud que el middleware devuelve en `X-Request-Id` y usa para correlacionar logs |
-| **Quality Gate** | Conjunto de condiciones de SonarCloud sobre el código nuevo; en ShareU está en **ERROR** y se declara |
+| **Quality Gate** | Conjunto de condiciones de SonarCloud sobre el código nuevo; en ShareU está en **OK** sobre `75bc601` (0 incidencias, todas las calificaciones en 1) |
 | **Sitio legado** | `shareuwensite-main/`: sitio estático anterior al frontend Next.js (ADR 0005); no se despliega |
 | **Matriz de retroalimentación** | Tabla de S17 con cada recomendación recibida, su origen, clasificación y evidencia |

@@ -17,9 +17,9 @@ dueño y estado. Prioridad ≥ 12 exige mitigación o aceptación explícita.
 
 **Dependencias.** `pip-audit -r requirements.in` sin vulnerabilidades conocidas; `npm audit` en CI
 como artefacto; Dependabot semanal; `next` corregido de 14.2.15 a **14.2.35**. Se explica por qué se
-audita `requirements.in` y no `requirements.txt` (hashes y transitivas sin pin). El Quality Gate de
-SonarCloud está en **ERROR** (44 incidencias) y sus hallazgos se clasifican como deuda aceptada en
-`dependencias.md` D6–D9 y arc42 §11.5.
+audita `requirements.in` y no `requirements.txt` (hashes y transitivas sin pin). Al cierre
+(2026-11-21) el análisis de SonarCloud sobre `75bc601` reporta **0 incidencias** y Quality Gate
+**OK**; el historial de hallazgos está en `dependencias.md` D6–D9 y arc42 §11.5.
 
 **Privacidad.** Solo nombre del autor; sin cuerpos, tokens ni IPs en logs; bandeja protegida.
 Retención automática pendiente antes de datos reales.

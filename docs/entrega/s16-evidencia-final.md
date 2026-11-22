@@ -92,7 +92,7 @@ límite en lugar de extrapolar.
 | arc42 1–12 con glosario, sin plantilla | Archivos 00–12; validador sin marcadores | Cumple | `scripts/validar_docs.py` |
 | C4 niveles 1–3 del sistema entregado | `nivel1.mmd`, `nivel-2.md`, `nivel-3.md` + `.mmd` | Cumple | Nivel 3 descompone el API real |
 | Tabla de aspectos recorrible | A1–A10, ocho columnas, 10/10 verificadas | Cumple | Validador exige columnas navegables |
-| Validación automática en el pipeline | Paso «Validar documentación» + `tests/test_docs.py` | Cumple en repositorio | Requiere push para verse en el run |
+| Validación automática en el pipeline | Paso «Validar documentación» + `tests/test_docs.py` | Cumple | Ejecutado en verde en los runs `44973782961`, `44973929626` y `44974059013` |
 | Contribución de todos los integrantes | `shortlog`: Dayana 28, Luis 15, Nicolas 14, Steven 5 (+1) | Cumple con límite | Actividad de octubre baja (1 commit); se declara |
 | Revisión cruzada con comentarios de fondo | 0 comentarios de review en la API de GitHub | **No cumple** | No se presenta como cumplido |
 | Demostración y sustentación | Sesión ante docente y jurado | No verificado | No verificable desde el repositorio |
@@ -146,6 +146,8 @@ persona desde el repositorio. Se declaran como no conformidades de proceso.
 ## 9. Lo que no se afirma
 
 - No se afirma que la búsqueda desplegada funcione: responde 500 al 2026-11-21.
-- No se afirma un Quality Gate en verde: sigue en **ERROR** hasta reanalizar las correcciones.
+- No se afirma un Quality Gate en verde por el paso del workflow: ese paso sigue en `skipped` por
+  falta de `SONAR_TOKEN`. El gate **sí** está en OK sobre `75bc601` según el análisis automático de
+  SonarCloud (0 incidencias), y así se cita con su fuente.
 - No se afirma revisión cruzada: hay 0 comentarios de review.
 - No se afirma que la medición represente el despliegue: es ASGI en proceso, sin red real.

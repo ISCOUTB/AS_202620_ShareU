@@ -44,7 +44,7 @@ dentro de `docs/evidencia/mediciones/`.
 | `npm audit` | Se ejecuta en CI y publica `npm-audit.json`; no bloquea (no hay Node local) |
 | Dependabot | PR semanales para pip, npm y Actions |
 | `next` | Subido de 14.2.15 (deprecado por seguridad) a **14.2.35** |
-| SonarCloud | Gate en **ERROR** al 2026-11-17; hallazgos clasificados en `dependencias.md` D6–D9. Varios corregidos en el repositorio (Dockerfiles, `Annotated`, banco de medición) y pendientes de push |
+| SonarCloud | Al cierre (2026-11-21) el análisis de `75bc601` reporta **0 incidencias** y gate **OK**; el historial de hallazgos está en `dependencias.md` D6–D9 y arc42 §11.5 |
 
 `pip-audit -r requirements.txt` no se usa porque el archivo tiene hashes y dependencias transitivas
 sin pin explícito; la justificación está en [`../seguridad/dependencias.md`](../seguridad/dependencias.md).

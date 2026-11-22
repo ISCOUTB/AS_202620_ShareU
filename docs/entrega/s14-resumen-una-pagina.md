@@ -14,11 +14,11 @@ despliegue respondía 404 al 2026-11-16, así que no hay corrida `--url` ni se p
 verificado. La caché fría concurrente produce *stampede* (21/300); se acepta.
 
 **Revisión de pares.** Se incorporaron los hallazgos de infraestructura, ADR, rutas canónicas,
-arc42/C4/README, modos de fallo, taller de mensajes, bandeja protegida y `next`. Quedan **abiertos**
-solo los que dependen de acciones humanas: empujar la corrección del workflow (los runs #44–#47
-fallaron sin jobs por `secrets` en un `if`), configurar `SONAR_TOKEN` y verificar las URLs
-desplegadas. El Quality Gate público está en **ERROR** y se declara con sus métricas; la tabla
-completa está en arc42 §11.3 y §11.5.
+arc42/C4/README, modos de fallo, taller de mensajes, bandeja protegida y `next`. Al cierre
+(2026-11-21) quedan **abiertos** solo los que dependen de acciones humanas: configurar
+`SONAR_TOKEN` para que el paso explícito del workflow deje de estar `skipped` y verificar el flujo
+de datos del despliegue. El Quality Gate público está en **OK** sobre `75bc601` (0 incidencias)
+según el análisis automático; la tabla completa está en arc42 §11.3 y §11.5.
 
 **Mensaje para la sustentación.** «Cumple en la medición local reproducible; el despliegue está
 pendiente de verificación.» No se atribuye al sistema lo que no se midió.

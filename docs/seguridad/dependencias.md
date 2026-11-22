@@ -27,10 +27,10 @@ limitación del resolvedor frente a un archivo de hashes. La auditoría se hace 
 | D3 | `npm audit` no puede ejecutarse en la máquina del equipo | Local | Se ejecuta en CI y se publica como artefacto; Dependabot cubre las actualizaciones | **Aceptado con verificación en CI** |
 | D4 | Dependencias de prueba (`pytest`, `httpx`) dentro del mismo `requirements.in` que runtime | Revisión manual | Se mantiene un solo archivo para que CI y Docker instalen lo mismo; separar runtime/test queda como mejora declarada | **Aceptado; mejora pendiente** |
 | D5 | Sin SBOM | Revisión S13 | Se declara como trabajo futuro; `requirements.txt` con hashes y el lockfile de npm son el inventario actual | **Pendiente, aceptado** |
-| D6 | SonarCloud marca instalaciones sin `--only-binary`/`--ignore-scripts` en los `Dockerfile` | Análisis estático (`docker:S8541`, `S8544`, `S6505`) | Corregido: `pip install --only-binary=:all: --require-hashes` en `Dockerfile` y `Dockploy/Dockerfile.api`; `npm ci --ignore-scripts` en ambos Dockerfile web | **Corregido en repositorio**; requiere push y nuevo análisis |
-| D7 | SonarCloud marca lectura de rutas y peticiones en `scripts/medicion/bench_busqueda.py` (`S8703`, `S8707`) | Análisis estático | Se añadieron `_url_medible` (solo http/https y hosts locales salvo `SHAREU_BENCH_PERMITIR_REMOTO=1`) y `_destino_seguro` (nombre simple, extensión `.json`/`.md` y salida confinada a `docs/evidencia/mediciones`), con pruebas en `tests/test_bench_busqueda.py` | **Corregido en repositorio y validado en local**; el reanálisis llega con el push |
-| D8 | SonarCloud marca `Depends`/`Header` en la firma de un endpoint (`python:S8410`) | Análisis estático | Se migraron las cabeceras de `administracion/router.py` y `documentos/router.py` a `Annotated` | **Corregido en repositorio**; requiere nuevo análisis |
-| D9 | SonarCloud analiza `shareuwensite-main/`, el sitio estático legado (29 de 33 incidencias) | Análisis estático | No es el frontend canónico (ADR 0005). Se corrigieron sus 29 incidencias en el árbol (accesibilidad, ternarios y exports) en lugar de excluirlo; sigue siendo legado no desplegado | **Corregido en repositorio**; requiere push y nuevo análisis |
+| D6 | SonarCloud marca instalaciones sin `--only-binary`/`--ignore-scripts` en los `Dockerfile` | Análisis estático (`docker:S8541`, `S8544`, `S6505`) | Corregido: `pip install --only-binary=:all: --require-hashes` en `Dockerfile` y `Dockploy/Dockerfile.api`; `npm ci --ignore-scripts` en ambos Dockerfile web | **Corregido y verificado**: 0 incidencias en el análisis de `75bc601` |
+| D7 | SonarCloud marca lectura de rutas y peticiones en `scripts/medicion/bench_busqueda.py` (`S8703`, `S8707`) | Análisis estático | Se añadieron `_url_medible` (solo http/https y hosts locales salvo `SHAREU_BENCH_PERMITIR_REMOTO=1`) y `_destino_seguro` (nombre simple, extensión `.json`/`.md` y salida confinada a `docs/evidencia/mediciones`); en `main()` el destino se reconstruye con `os.path.basename`, que es el saneador que reconoce el análisis de flujo. Pruebas en `tests/test_bench_busqueda.py` | **Corregido y verificado**: `S8707` cerrado en `75bc601` |
+| D8 | SonarCloud marca `Depends`/`Header` en la firma de un endpoint (`python:S8410`) | Análisis estático | Se migraron las cabeceras de `administracion/router.py` y `documentos/router.py` a `Annotated` | **Corregido y verificado**: 0 incidencias en `75bc601` |
+| D9 | SonarCloud analiza `shareuwensite-main/`, el sitio estático legado (29 de las 33 incidencias iniciales) | Análisis estático | No es el frontend canónico (ADR 0005). Se corrigieron sus 29 incidencias en el árbol (accesibilidad, ternarios y exports) en lugar de excluirlo; sigue siendo legado no desplegado | **Corregido y verificado**: 0 incidencias en `75bc601` |
 
 ## 4. Reglas del equipo
 
@@ -52,17 +52,19 @@ No known vulnerabilities found
 ```
 
 El resultado local no sustituye al de CI: el pipeline es la fuente de verdad y su estado se
-consulta en la pestaña *Actions*. Al 2026-11-21 los runs #44–#47 fallaron **sin jobs** porque el
-workflow usaba `secrets` dentro de un `if` de paso, algo que GitHub rechaza al validar el archivo.
-La corrección (token como `env` de job y condición sobre `env.SONAR_TOKEN`), junto con el paso
-`scripts/validar_docs.py`, está en el árbol de trabajo y pendiente de push. Por eso este documento no
-afirma que el pipeline esté en verde.
+consulta en la pestaña *Actions*. Los runs `44973782961`, `44973929626` y `44974059013` (commits
+`acb2ed4`, `08931ea` y `75bc601`) terminaron en **verde**, incluidos los *jobs* `dependencias`,
+`test` y `medicion`; el run final es el primero sobre el estado documentado aquí. Los runs #44–#47
+habían fallado **sin jobs** porque el workflow usaba `secrets` dentro de un `if` de paso, algo que
+GitHub rechaza al validar el archivo; la corrección (token como `env` de job y condición sobre
+`env.SONAR_TOKEN`) está desplegada.
 
-El **Quality Gate de SonarCloud está en ERROR** (`new_reliability_rating=3`,
-`new_security_rating=3`, **33 incidencias abiertas**, consultado el 2026-11-21; 29 en el sitio
-legado). Las 33 se corrigieron en el árbol. No se oculta: los hallazgos están clasificados en la
-tabla D6–D9 y en [`../arc42/11-riesgos-y-deuda-tecnica.md`](../arc42/11-riesgos-y-deuda-tecnica.md)
-§11.5.
+El paso explícito «Análisis SonarCloud» del workflow sigue en `skipped`: el secreto `SONAR_TOKEN`
+no está configurado en el repositorio. El análisis llega por la integración automática de
+GitHub–SonarCloud, y sobre `75bc601` reporta **0 incidencias abiertas** y el **Quality Gate en OK**
+(`new_reliability_rating=1`, `new_security_rating=1`, `new_maintainability_rating=1`,
+`new_security_hotspots_reviewed=100`). Los hallazgos y su cierre están en la tabla D6–D9 y en
+[`../arc42/11-riesgos-y-deuda-tecnica.md`](../arc42/11-riesgos-y-deuda-tecnica.md) §11.5.
 
 ## 6. Trazabilidad
 

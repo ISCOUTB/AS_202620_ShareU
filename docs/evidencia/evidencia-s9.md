@@ -58,8 +58,8 @@ Barrido de imports: `git grep -nE '^from app\.' HEAD -- app`.
 |---|---|---|---|
 | E1 | `busqueda` importaba un archivo interno de `administracion` | `app/busqueda/service.py` L6 | Fachada `administracion/service.py` + `test_fronteras.py` (ADR 0008) |
 | E2 | `propiedad-datos.md` decía que el único cruce era `busqueda -> documentos.service` | `docs/ddd/propiedad-datos.md` | Actualizado |
-| E3 | README y arc42 citaban archivos que no estaban en el repositorio: `tests/test_contrato.py`, `Dockerfile`, ADR 0005 a 0007 | README, arc42 §2, §7, §8.5 | **Resuelto en noviembre de 2026:** existen `Dockerfile`, `app/frontend/Dockerfile`, `Dockploy/compose.lab.yml`, `tests/test_contrato.py` y los ADR 0005–0007; la plataforma vigente es Dockploy, no Render |
-| E4 | Marcadores sin resolver en `ia.md` (`<URL Render>`, `<URL Vercel>`, `<integrante>`, `<URL del run en Actions>`) y en README | `docs/ia.md` filas 7 y 8, README | **Resuelto en noviembre de 2026:** los marcadores se reemplazaron por el estado real (URLs 404 declaradas, acciones humanas pendientes); el run remoto y SonarCloud siguen abiertos y se declaran así |
+| E3 | README y arc42 citaban archivos que no estaban en el repositorio: `tests/test_contrato.py`, `Dockerfile`, ADR 0005 a 0007 | README, arc42 §2, §7, §8.5 | **Resuelto en noviembre de 2026:** existen `Dockerfile`, `app/frontend/Dockerfile`, `Dockploy/compose.lab.yaml`, `tests/test_contrato.py` y los ADR 0005–0007; la plataforma vigente es Dokploy, no Render |
+| E4 | Marcadores sin resolver en `ia.md` (`<URL Render>`, `<URL Vercel>`, `<integrante>`, `<URL del run en Actions>`) y en README | `docs/ia.md` filas 7 y 8, README | **Resuelto en noviembre de 2026:** los marcadores se reemplazaron por el estado real; el run remoto existe (`44974059013`) y SonarCloud está en **OK** con 0 incidencias sobre `75bc601` |
 
 ## 6. Dependencias propuestas por el modelo
 

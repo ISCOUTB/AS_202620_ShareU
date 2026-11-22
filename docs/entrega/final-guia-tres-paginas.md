@@ -223,6 +223,7 @@ es una no conformidad de proceso, no se presenta como cumplida.
 
 El sistema demuestra en local el escenario prioritario, la idempotencia, la resiliencia y la
 seguridad administrativa. El despliegue está activo pero **no completa el flujo de datos** por
-configuración de Firestore; el Quality Gate de SonarCloud sigue en **ERROR** hasta que se empujen
-las correcciones de esta entrega y se reanalice. Ninguna de las dos cosas se oculta: se declaran con
-su evidencia, su dueño y su condición de cierre.
+configuración de Firestore; el Quality Gate de SonarCloud está en **OK** sobre `75bc601` (0
+incidencias) según el análisis automático, mientras el paso explícito del workflow sigue en
+`skipped` por falta de `SONAR_TOKEN`. Ninguna de las dos cosas se oculta: se declaran con su
+evidencia, su dueño y su condición de cierre.

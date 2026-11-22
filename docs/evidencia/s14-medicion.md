@@ -60,15 +60,15 @@ la vez. Se acepta y se documenta.
 | Hallazgo | Qué se cambió | Estado |
 |---|---|---|
 | El indicador «≤ 3 interacciones» no era operacional | Se adoptó p95/error/lecturas con herramienta y línea base (ADR 0016) | Cerrado |
-| Faltaba infraestructura de despliegue | `Dockerfile`, `app/frontend/Dockerfile`, `docker-compose.yml`, `Dockploy/compose.lab.yml` | Cerrado en repositorio; despliegue sin verificar |
+| Faltaba infraestructura de despliegue | `Dockerfile`, `app/frontend/Dockerfile`, `docker-compose.yml`, `Dockploy/compose.lab.yaml` | Cerrado; despliegue activo con búsqueda pendiente de credenciales |
 | Faltaban ADR de decisiones recientes | ADR 0011–0016 | Cerrado |
 | Aspectos e IA en rutas no canónicas | `docs/aspectos.md`, `docs/ia.md` | Cerrado |
 | arc42/C4/README describían SQLite, Render y Vercel | Reescritos con Firestore, Dokploy, caché y outbox | Cerrado en documentos |
 | El borde backend→Firestore no estaba en modos de fallo | `docs/resiliencia/modos-de-fallo.md` reescrito y probado | Cerrado |
 | La bandeja exponía datos sin credencial | `X-Admin-Token` obligatorio; OpenAPI 1.3.0 | Cerrado con prueba |
 | `next@14.2.15` deprecado | `14.2.35` | Cerrado en repositorio; build en CI |
-| Sin run remoto de CI ni Quality Gate | Workflow completo. Los runs #44–#47 fallaron sin jobs por `secrets` dentro de un `if`; la corrección está en la copia local y falta empujarla. El gate público está en **ERROR** y se declara en arc42 §11.5 | **Abierto** (acción humana) |
-| URLs desplegadas en 404 | Se declaran no verificadas | **Abierto** (acción humana) |
+| Sin run remoto de CI ni Quality Gate | Workflow completo. Los runs #44–#47 fallaron sin jobs por `secrets` dentro de un `if`; corregido. Los runs `44973782961`, `44973929626` y `44974059013` están en verde y el gate público está en **OK** sobre `75bc601` (0 incidencias) | **Cerrado**; el paso explícito de Sonar queda `skipped` por falta de `SONAR_TOKEN` |
+| URLs desplegadas en 404 | Comprobación del 2026-11-21: web 200 y `/health` 200; búsqueda 500 por configuración | **Parcial** (acción humana: cargar credenciales de Firestore) |
 
 La tabla completa, con dueño y riesgo residual, está en arc42 §11.3.
 
