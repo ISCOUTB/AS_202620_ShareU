@@ -49,7 +49,7 @@ export default function Explorar() {
     setFiltros({});
     void buscar({});
   }
-
+  const textoResultados = resultados.length === 1 ? "resultado" : "resultados";
   return (
     <div className="site-shell">
       <Header />
@@ -104,7 +104,7 @@ export default function Explorar() {
               </h2>
             </div>
             <span className="result-count" aria-live="polite">
-              {cargando ? "Buscando..." : `${resultados.length} resultado${resultados.length === 1 ? "" : "s"}`}
+             {cargando ? "Buscando..." : `${resultados.length} ${textoResultados}`}
             </span>
           </div>
 

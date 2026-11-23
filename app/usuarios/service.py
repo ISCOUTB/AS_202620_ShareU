@@ -19,6 +19,9 @@ from typing import Any
 
 from app.documentos.service import obtener_documentos, registrar_documento
 
+UNIVERSIDAD_PREDETERMINADA = "Universidad Nacional"
+CARRERA_PREDETERMINADA = "Ingeniería de Sistemas"
+
 _LOCK = threading.Lock()
 
 # Almacén de usuarios y sesiones en memoria con sincronización a Firestore
@@ -45,8 +48,8 @@ _USUARIOS_MEMORIA["ana@utb.edu.co"] = {
     "id": "usr_ana_001",
     "email": "ana@utb.edu.co",
     "nombre": "Ana",
-    "universidad": "Universidad Nacional",
-    "carrera": "Ingeniería de Sistemas",
+    "universidad": UNIVERSIDAD_PREDETERMINADA,
+    "carrera": CARRERA_PREDETERMINADA,
     "password_hash": _hash_ana,
     "salt": _salt_ana,
     "creado_en": "2026-11-01T00:00:00Z",
@@ -58,8 +61,8 @@ _USUARIOS_MEMORIA["carlos@utb.edu.co"] = {
     "id": "usr_carlos_002",
     "email": "carlos@utb.edu.co",
     "nombre": "Carlos",
-    "universidad": "Universidad Nacional",
-    "carrera": "Ingeniería de Sistemas",
+    "universidad": UNIVERSIDAD_PREDETERMINADA,
+    "carrera": CARRERA_PREDETERMINADA,
     "password_hash": _hash_carlos,
     "salt": _salt_carlos,
     "creado_en": "2026-11-01T00:00:00Z",
@@ -87,8 +90,8 @@ def registrar_usuario(
     email: str,
     password: str,
     nombre: str,
-    universidad: str = "Universidad Nacional",
-    carrera: str = "Ingeniería de Sistemas",
+    universidad: str = UNIVERSIDAD_PREDETERMINADA,
+    carrera: str = CARRERA_PREDETERMINADA,
 ) -> dict[str, Any]:
     """Registra un nuevo usuario en ShareU."""
     email_limpio = email.strip().lower()
@@ -173,8 +176,8 @@ def iniciar_sesion(email: str, password: str) -> dict[str, Any]:
             "usuario_id": usuario["id"],
             "email": usuario["email"],
             "nombre": usuario["nombre"],
-            "universidad": usuario.get("universidad", "Universidad Nacional"),
-            "carrera": usuario.get("carrera", "Ingeniería de Sistemas"),
+            "universidad": usuario.get("universidad", UNIVERSIDAD_PREDETERMINADA),
+            "carrera": usuario.get("carrera", CARRERA_PREDETERMINADA),
             "creado_en": time.time(),
         }
         _SESIONES_MEMORIA[token] = info_sesion
@@ -192,8 +195,8 @@ def iniciar_sesion(email: str, password: str) -> dict[str, Any]:
             "id": usuario["id"],
             "email": usuario["email"],
             "nombre": usuario["nombre"],
-            "universidad": usuario.get("universidad", "Universidad Nacional"),
-            "carrera": usuario.get("carrera", "Ingeniería de Sistemas"),
+            "universidad": usuario.get("universidad", UNIVERSIDAD_PREDETERMINADA),
+            "carrera": usuario.get("carrera", CARRERA_PREDETERMINADA),
         },
     }
 
@@ -220,8 +223,8 @@ def obtener_perfil_por_token(token: str) -> dict[str, Any]:
             "id": sesion["usuario_id"],
             "email": sesion["email"],
             "nombre": sesion["nombre"],
-            "universidad": sesion.get("universidad", "Universidad Nacional"),
-            "carrera": sesion.get("carrera", "Ingeniería de Sistemas"),
+            "universidad": sesion.get("universidad", UNIVERSIDAD_PREDETERMINADA),
+            "carrera": sesion.get("carrera", CARRERA_PREDETERMINADA),
         }
 
 

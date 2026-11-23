@@ -25,4 +25,117 @@
 .modal-dialog {
   position: relative;
   z-index: 1;
+  margin: auto;
+  border: none;
+  color: inherit;
+}
+/* Página principal de ShareU */
+
+.landing-features {
+  background: var(--cream);
+  padding: 75px 34px;
+}
+
+.landing-features-inner {
+  max-width: 1172px;
+  margin: 0 auto;
+}
+
+.landing-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 30px;
+}
+
+.landing-card {
+  min-width: 0;
+  background: white;
+  border: 1px solid #e8e9df;
+  border-radius: 20px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.landing-card-icon {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  font-size: 28px;
+}
+
+.landing-card h3 {
+  font-size: 22px;
+  color: var(--forest);
+  margin: 0;
+}
+
+.landing-card p {
+  color: var(--muted);
+  line-height: 1.7;
+  font-size: 14px;
+  margin: 0;
+}
+
+.landing-card-link {
+  margin-top: auto;
+  padding-top: 12px;
+  color: var(--forest);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.landing-card-link span {
+  margin-left: 8px;
+}
+
+.landing-cta-banner {
+  margin-top: 35px;
+  padding: 35px;
+  background: #e9f2da;
+  border-radius: 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 25px;
+}
+
+.landing-cta-banner h3 {
+  margin: 12px 0;
+  font-family: Georgia, serif;
+  font-size: 28px;
+  color: var(--forest);
+}
+
+.landing-cta-banner p {
+  color: var(--muted);
+  margin-bottom: 0;
+}
+
+@media (max-width: 900px) {
+  .landing-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .landing-features {
+    padding: 45px 20px;
+  }
+
+  .landing-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-cta-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 25px;
+  }
 }
