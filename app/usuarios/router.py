@@ -10,6 +10,9 @@ from pydantic import BaseModel, Field
 
 from app.usuarios import service
 
+UNIVERSIDAD_PREDETERMINADA = "Universidad Nacional"
+CARRERA_PREDETERMINADA = "Ingeniería de Sistemas"
+
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 
 
@@ -17,8 +20,8 @@ class RegistroEntrada(BaseModel):
     email: str = Field(min_length=3, max_length=120)
     password: str = Field(min_length=6, max_length=120)
     nombre: str = Field(min_length=1, max_length=120)
-    universidad: str = Field(default="Universidad Nacional", max_length=120)
-    carrera: str = Field(default="Ingeniería de Sistemas", max_length=120)
+    universidad: str = Field(default=UNIVERSIDAD_PREDETERMINADA, max_length=120)
+    carrera: str = Field(default=CARRERA_PREDETERMINADA, max_length=120)
 
 
 class LoginEntrada(BaseModel):
@@ -30,8 +33,8 @@ class DocumentoUsuarioEntrada(BaseModel):
     titulo: str = Field(min_length=1, max_length=200)
     materia: str = Field(min_length=1, max_length=120)
     tipo: str = Field(min_length=1, max_length=60)
-    universidad: str = Field(default="Universidad Nacional", max_length=120)
-    carrera: str = Field(default="Ingeniería de Sistemas", max_length=120)
+    universidad: str = Field(default=UNIVERSIDAD_PREDETERMINADA, max_length=120)
+    carrera: str = Field(default=CARRERA_PREDETERMINADA, max_length=120)
     palabras_clave: str = Field(default="", max_length=400)
 
 
@@ -121,8 +124,8 @@ def subir_documento_propio(
         titulo=payload.titulo,
         materia=payload.materia,
         tipo=payload.tipo,
-        universidad=payload.universidad or usuario.get("universidad", "Universidad Nacional"),
-        carrera=payload.carrera or usuario.get("carrera", "Ingeniería de Sistemas"),
+        universidad=payload.universidad or usuario.get("universidad", UNIVERSIDAD_PREDETERMINADA),
+        carrera=payload.carrera or usuario.get("carrera", CARRERA_PREDETERMINADA),
         palabras_clave=payload.palabras_clave,
     )
     return documento

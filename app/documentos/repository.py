@@ -160,7 +160,7 @@ def _normalizar_pem(clave: str) -> str:
         crudo += "=" * (-len(crudo) % 4)
         try:
             clave = base64.b64decode(crudo).decode("utf-8")
-        except (ValueError, UnicodeDecodeError) as exc:
+        except ValueError as exc:
             raise ValueError("La private_key no tiene cabeceras PEM válidas") from exc
 
     lineas = [linea.strip() for linea in clave.splitlines() if linea.strip()]
@@ -201,7 +201,7 @@ def _cargar_cuenta() -> dict[str, Any] | None:
             crudo += "=" * (-len(crudo) % 4)
             try:
                 datos = json.loads(base64.b64decode(crudo))
-            except (ValueError, UnicodeDecodeError) as exc:
+            except ValueError as exc:
                 raise ValueError(
                     "FIREBASE_CREDENTIALS_JSON no es un JSON válido ni Base64 de un JSON"
                 ) from exc
@@ -324,8 +324,8 @@ def _inicializar() -> None:
         try:
             cliente = _cliente()
         except Exception as exc:
-            logging.getLogger("shareu").error(
-                f"Error inicializando Firestore: {exc}", exc_info=True
+            logging.getLogger("shareu").exception(
+                "Error inicializando Firestore"
             )
             raise ErrorPersistencia(
                 f"No se pudo inicializar el cliente de Firestore: {exc}"

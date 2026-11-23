@@ -122,7 +122,7 @@ export default function Explorar() {
             </div>
           )}
 
-          {cargando && <div className="message" role="status">Estamos buscando materiales para ti…</div>}
+          {cargando && <output className="message">Estamos buscando materiales para ti…</output>}
 
           {!cargando && !error && (
             resultados.length === 0 ? (
