@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Usuario,
   loginUsuario,
@@ -38,7 +38,7 @@ const AuthContext = createContext<AuthContextType>({
 const STORAGE_TOKEN_KEY = "shareu_token";
 const STORAGE_USER_KEY = "shareu_usuario";
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  async function login(email: string, pass: string) {
+  const login = useCallback(async (email: string, pass: string) => {
     const respuesta = await loginUsuario(email, pass);
     setToken(respuesta.token);
     setUsuario(respuesta.usuario);
@@ -79,21 +79,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(STORAGE_TOKEN_KEY, respuesta.token);
       localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(respuesta.usuario));
     } catch {}
-  }
+  }, []);
 
-  async function registro(datos: {
+  const registro = useCallback(async (datos: {
     email: string;
     password: string;
     nombre: string;
     universidad?: string;
     carrera?: string;
-  }) {
+  }) => {
     await registrarUsuario(datos);
     // Iniciar sesión automáticamente tras registro
     await login(datos.email, datos.password);
-  }
+  }, [login]);
 
-  async function logout() {
+  const logout = useCallback(async () => {
     if (token) {
       await cerrarSesion(token);
     }
@@ -103,28 +103,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem(STORAGE_TOKEN_KEY);
       localStorage.removeItem(STORAGE_USER_KEY);
     } catch {}
-  }
+  }, [token]);
 
-  async function recargarPerfil() {
+  const recargarPerfil = useCallback(async () => {
     if (!token) return;
     try {
       const perfilActualizado = await obtenerPerfil(token);
       setUsuario(perfilActualizado);
       localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(perfilActualizado));
     } catch {}
-  }
+  }, [token]);
+
+  const contextValue = useMemo<AuthContextType>(
+    () => ({ usuario, token, cargando, login, registro, logout, recargarPerfil }),
+    [usuario, token, cargando, login, registro, logout, recargarPerfil]
+  );
 
   return (
     <AuthContext.Provider
-      value={{
-        usuario,
-        token,
-        cargando,
-        login,
-        registro,
-        logout,
-        recargarPerfil,
-      }}
+      value={contextValue}
     >
       {children}
     </AuthContext.Provider>
