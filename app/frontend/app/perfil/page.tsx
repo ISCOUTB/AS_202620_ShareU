@@ -92,9 +92,9 @@ export default function Perfil() {
       <div className="site-shell">
         <Header />
         <main className="page-main">
-          <div className="message" role="status">
+          <output className="message">
             Cargando tu perfil...
-          </div>
+          </output>
         </main>
         <Footer />
       </div>
@@ -124,6 +124,8 @@ export default function Perfil() {
       </div>
     );
   }
+
+  const etiquetaDocumentos = documentos.length === 1 ? "documento" : "documentos";
 
   return (
     <div className="site-shell">
@@ -175,18 +177,13 @@ export default function Perfil() {
         {/* Modal de subida de material */}
         {mostrarModal && (
           <div className="modal-overlay">
-  <button
-    type="button"
-    className="modal-backdrop"
-    aria-label="Cerrar ventana de subida de material"
-    onClick={() => setMostrarModal(false)}
-  />
-  <div
-    className="modal-dialog"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Subir nuevo material"
-  >
+            <button
+              type="button"
+              className="modal-backdrop"
+              aria-label="Cerrar ventana de subida de material"
+              onClick={() => setMostrarModal(false)}
+            />
+            <dialog open className="modal-dialog" aria-label="Subir nuevo material">
               <div className="modal-header">
                 <div>
                   <span className="section-kicker">COMPARTE TU CONOCIMIENTO</span>
@@ -290,7 +287,7 @@ export default function Perfil() {
                   </button>
                 </div>
               </form>
-            </div>
+            </dialog>
           </div>
         )}
 
@@ -306,7 +303,7 @@ export default function Perfil() {
             <span className="result-count">
               {cargandoDocs
                 ? "Cargando..."
-                : `${documentos.length} documento${documentos.length === 1 ? "" : "s"}`}
+                : `${documentos.length} ${etiquetaDocumentos}`}
             </span>
           </div>
 
@@ -317,9 +314,9 @@ export default function Perfil() {
           )}
 
           {cargandoDocs && (
-            <div className="message" role="status">
+            <output className="message">
               Cargando tus materiales...
-            </div>
+            </output>
           )}
 
           {!cargandoDocs && !errorDocs && documentos.length === 0 && (
