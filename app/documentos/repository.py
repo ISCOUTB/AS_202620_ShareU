@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import threading
 import time
@@ -140,9 +141,24 @@ _inicializado = False
 def _credencial():
     from firebase_admin import credentials
 
-    contenido = os.getenv("FIREBASE_CREDENTIALS_JSON")
+    contenido = os.getenv("FIREBASE_CREDENTIALS_JSON", "").strip()
     if contenido:
-        return credentials.Certificate(json.loads(contenido))
+        # Limpiar comillas exteriores que Dokploy o el entorno puedan agregar
+        if (contenido.startswith("'") and contenido.endswith("'")) or (
+            contenido.startswith('"') and contenido.endswith('"')
+        ):
+            contenido = contenido[1:-1].strip()
+
+        try:
+            datos = json.loads(contenido)
+        except Exception:
+            datos = json.loads(contenido.replace('\\"', '"'))
+
+        # Auto-reparar los saltos de línea de la private_key (de \\n a \n real)
+        if isinstance(datos, dict) and "private_key" in datos and isinstance(datos["private_key"], str):
+            datos["private_key"] = datos["private_key"].replace("\\n", "\n")
+
+        return credentials.Certificate(datos)
     return credentials.ApplicationDefault()  # usa GOOGLE_APPLICATION_CREDENTIALS
 
 
@@ -235,13 +251,12 @@ def _inicializar() -> None:
     with _lock_inicializacion:
         if _inicializado:
             return
-        # FIX: _cliente() se llamaba sin protección; cualquier excepción
-        # (ValueError de credenciales malformadas, JSONDecodeError, etc.)
-        # escapaba como error crudo → 500. Ahora se convierte en
-        # ErrorPersistencia → el router lo captura y responde 503.
         try:
             cliente = _cliente()
         except Exception as exc:
+            logging.getLogger("shareu").error(
+                f"Error inicializando Firestore: {exc}", exc_info=True
+            )
             raise ErrorPersistencia(
                 f"No se pudo inicializar el cliente de Firestore: {exc}"
             ) from exc
