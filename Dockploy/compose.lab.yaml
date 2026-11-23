@@ -51,6 +51,8 @@ services:
       args:
         NEXT_PUBLIC_API_URL: https://api-shareu.iscoutb.dev
     restart: unless-stopped
+    environment:
+      API_URL: https://api-shareu.iscoutb.dev
     expose:
       - "3000"
     depends_on:

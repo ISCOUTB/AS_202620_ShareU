@@ -54,7 +54,16 @@ export class ErrorApi extends Error {
   }
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+// La URL del backend se resuelve en tiempo de ejecución (window) cuando está
+// disponible, para que un cambio en Dokploy no exija reconstruir la imagen. Si
+// no hay override en runtime, se usa el valor horneado en el build.
+function apiUrl(): string {
+  if (typeof window !== "undefined") {
+    const globalUrl = (window as { __SHAREU_API_URL?: string }).__SHAREU_API_URL;
+    if (globalUrl) return globalUrl;
+  }
+  return process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+}
 
 // Modos de fallo de la integración frontend -> API (docs/resiliencia/modos-de-fallo.md).
 const TIMEOUT_MS = 15000;
@@ -89,7 +98,7 @@ export async function buscarDocumentos(filtros: Filtros): Promise<ResultadoBusqu
   Object.entries(filtros).forEach(([clave, valor]) => {
     if (valor) params.set(clave, valor);
   });
-  const res = await pedirConReintento(`${API_URL}/busqueda/documentos?${params.toString()}`);
+  const res = await pedirConReintento(`${apiUrl()}/busqueda/documentos?${params.toString()}`);
   if (!res.ok) {
     const cuerpo = await res.json().catch(() => ({}) as { detail?: string });
     throw new ErrorApi(res.status, cuerpo.detail ?? `Error ${res.status} al buscar documentos`);
@@ -98,7 +107,7 @@ export async function buscarDocumentos(filtros: Filtros): Promise<ResultadoBusqu
 }
 
 export async function loginUsuario(email: string, password: string): Promise<RespuestaLogin> {
-  const res = await pedirConTimeout(`${API_URL}/usuarios/login`, {
+  const res = await pedirConTimeout(`${apiUrl()}/usuarios/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
@@ -117,7 +126,7 @@ export async function registrarUsuario(datos: {
   universidad?: string;
   carrera?: string;
 }): Promise<Usuario> {
-  const res = await pedirConTimeout(`${API_URL}/usuarios/registro`, {
+  const res = await pedirConTimeout(`${apiUrl()}/usuarios/registro`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(datos),
@@ -130,7 +139,7 @@ export async function registrarUsuario(datos: {
 }
 
 export async function obtenerPerfil(token: string): Promise<Usuario> {
-  const res = await pedirConTimeout(`${API_URL}/usuarios/perfil`, {
+  const res = await pedirConTimeout(`${apiUrl()}/usuarios/perfil`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error("Sesión inválida o expirada");
@@ -138,14 +147,14 @@ export async function obtenerPerfil(token: string): Promise<Usuario> {
 }
 
 export async function cerrarSesion(token: string): Promise<void> {
-  await pedirConTimeout(`${API_URL}/usuarios/logout`, {
+  await pedirConTimeout(`${apiUrl()}/usuarios/logout`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   }).catch(() => {});
 }
 
 export async function obtenerDocumentosUsuario(token: string): Promise<Documento[]> {
-  const res = await pedirConTimeout(`${API_URL}/usuarios/perfil/documentos`, {
+  const res = await pedirConTimeout(`${apiUrl()}/usuarios/perfil/documentos`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error("Error al obtener los materiales del usuario");
@@ -154,7 +163,7 @@ export async function obtenerDocumentosUsuario(token: string): Promise<Documento
 }
 
 export async function subirDocumentoUsuario(token: string, doc: DocumentoNuevo): Promise<Documento> {
-  const res = await pedirConTimeout(`${API_URL}/usuarios/perfil/documentos`, {
+  const res = await pedirConTimeout(`${apiUrl()}/usuarios/perfil/documentos`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
