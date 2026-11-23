@@ -174,8 +174,19 @@ export default function Perfil() {
 
         {/* Modal de subida de material */}
         {mostrarModal && (
-          <div className="modal-overlay" onClick={() => setMostrarModal(false)}>
-            <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-overlay">
+  <button
+    type="button"
+    className="modal-backdrop"
+    aria-label="Cerrar ventana de subida de material"
+    onClick={() => setMostrarModal(false)}
+  />
+  <div
+    className="modal-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Subir nuevo material"
+  >
               <div className="modal-header">
                 <div>
                   <span className="section-kicker">COMPARTE TU CONOCIMIENTO</span>
