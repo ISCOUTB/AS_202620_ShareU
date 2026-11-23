@@ -235,7 +235,16 @@ def _inicializar() -> None:
     with _lock_inicializacion:
         if _inicializado:
             return
-        cliente = _cliente()
+        # FIX: _cliente() se llamaba sin protección; cualquier excepción
+        # (ValueError de credenciales malformadas, JSONDecodeError, etc.)
+        # escapaba como error crudo → 500. Ahora se convierte en
+        # ErrorPersistencia → el router lo captura y responde 503.
+        try:
+            cliente = _cliente()
+        except Exception as exc:
+            raise ErrorPersistencia(
+                f"No se pudo inicializar el cliente de Firestore: {exc}"
+            ) from exc
         coleccion = cliente.collection(_COLECCION)
         existente = _con_reintentos(
             lambda: next(iter(coleccion.limit(1).stream()), None)
