@@ -61,6 +61,10 @@ class _JsonFormatter(logging.Formatter):
             value = getattr(record, field, None)
             if value is not None:
                 payload[field] = value
+        # FIX: incluir traceback completo cuando existe (logger.exception lo provee)
+        # Esto no expone secretos: solo muestra tipos de excepción y líneas de código.
+        if record.exc_info:
+            payload["exc_info"] = self.formatException(record.exc_info)
         return json.dumps(payload, ensure_ascii=False)
 
 
@@ -106,7 +110,7 @@ app.add_middleware(
     allow_origins=_origenes_permitidos(),
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Idempotency-Key", "X-Admin-Token", "X-Request-ID", "Authorization"],
+    allow_headers=["Content-Type", "Idempotency-Key", "X-Admin-Token", "X-Request-ID"],
     expose_headers=["X-Request-ID"],
 )
 
