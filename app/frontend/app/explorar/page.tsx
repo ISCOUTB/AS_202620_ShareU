@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { buscarDocumentos, Documento, Filtros } from "@/lib/api";
+import { buscarDocumentos, Documento, ErrorApi, Filtros } from "@/lib/api";
 
 const campos: { clave: keyof Filtros; etiqueta: string; ejemplo: string }[] = [
   { clave: "palabra_clave", etiqueta: "¿Qué estás buscando?", ejemplo: "Ej. cálculo, programación, física..." },
@@ -27,9 +27,17 @@ export default function Explorar() {
     try {
       const data = await buscarDocumentos(f);
       if (id === ultimaBusqueda.current) setResultados(data.resultados);
-    } catch {
+    } catch (e) {
       if (id === ultimaBusqueda.current) {
-        setError("No se pudo conectar con el backend o tardó demasiado. Intenta de nuevo.");
+        if (e instanceof ErrorApi && e.status === 503) {
+          setError(
+            "La búsqueda no está disponible ahora: el servidor no puede acceder a la base de datos. Intenta de nuevo en unos minutos."
+          );
+        } else if (e instanceof ErrorApi) {
+          setError(`El servidor respondió con un error (${e.status}). Intenta de nuevo.`);
+        } else {
+          setError("No se pudo conectar con el backend o tardó demasiado. Intenta de nuevo.");
+        }
       }
     } finally {
       if (id === ultimaBusqueda.current) setCargando(false);

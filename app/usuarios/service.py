@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import secrets
 import threading
@@ -68,18 +69,27 @@ _USUARIOS_MEMORIA["carlos@utb.edu.co"] = {
 
 def _obtener_cliente_firestore():
     """Intenta obtener el cliente de Firestore si la credencial existe."""
-    if not os.getenv("FIREBASE_CREDENTIALS_JSON"):
+    contenido = (os.getenv("FIREBASE_CREDENTIALS_JSON") or "").strip()
+    if not contenido:
         return None
     try:
         import firebase_admin
         from firebase_admin import credentials, firestore
 
         if not firebase_admin._apps:
-            contenido = os.getenv("FIREBASE_CREDENTIALS_JSON")
-            cred = credentials.Certificate(json.loads(contenido))
-            firebase_admin.initialize_app(cred)
+            if len(contenido) >= 2 and contenido[0] == contenido[-1] and contenido[0] in "\"'":
+                contenido = contenido[1:-1].strip()
+            datos = json.loads(contenido)
+            # Misma reparación que documentos.repository: \\n literal -> salto real.
+            if isinstance(datos, dict) and isinstance(datos.get("private_key"), str):
+                datos["private_key"] = datos["private_key"].replace("\\n", "\n")
+            firebase_admin.initialize_app(credentials.Certificate(datos))
         return firestore.client()
-    except Exception:
+    except Exception as exc:
+        logging.getLogger("shareu").warning(
+            "Firestore no disponible para usuarios (%s); se usa el almacén en memoria.",
+            type(exc).__name__,
+        )
         return None
 
 

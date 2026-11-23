@@ -42,6 +42,18 @@ export type DocumentoNuevo = {
   palabras_clave?: string;
 };
 
+// Error con el código HTTP para que la UI distinga "servidor no disponible" (5xx)
+// de un fallo real de red o de timeout (docs/resiliencia/modos-de-fallo.md).
+export class ErrorApi extends Error {
+  readonly status: number;
+
+  constructor(status: number, mensaje: string) {
+    super(mensaje);
+    this.name = "ErrorApi";
+    this.status = status;
+  }
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
 // Modos de fallo de la integración frontend -> API (docs/resiliencia/modos-de-fallo.md).
@@ -78,7 +90,10 @@ export async function buscarDocumentos(filtros: Filtros): Promise<ResultadoBusqu
     if (valor) params.set(clave, valor);
   });
   const res = await pedirConReintento(`${API_URL}/busqueda/documentos?${params.toString()}`);
-  if (!res.ok) throw new Error(`Error ${res.status} al buscar documentos`);
+  if (!res.ok) {
+    const cuerpo = await res.json().catch(() => ({}) as { detail?: string });
+    throw new ErrorApi(res.status, cuerpo.detail ?? `Error ${res.status} al buscar documentos`);
+  }
   return res.json();
 }
 

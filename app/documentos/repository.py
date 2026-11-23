@@ -17,6 +17,7 @@ Desde S12 este repositorio incorpora:
 """
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import logging
@@ -138,28 +139,97 @@ _cliente_firestore = None
 _inicializado = False
 
 
+def _normalizar_pem(clave: str) -> str:
+    """Devuelve la ``private_key`` como un PEM canónico.
+
+    El valor puede llegar con ``\\n`` literales, con CRLF, con espacios o con el
+    relleno ``=`` recortado al copiarlo en el panel de despliegue. ``cryptography``
+    rechaza ese último caso con ``InvalidData(Invalid padding)``, así que aquí se
+    recompone el cuerpo base64 antes de entregarlo a ``firebase_admin``.
+    """
+    clave = clave.strip()
+    if len(clave) >= 2 and clave[0] == clave[-1] and clave[0] in "\"'":
+        clave = clave[1:-1].strip()
+
+    for escapado, real in (("\\r\\n", "\n"), ("\\n", "\n"), ("\\r", "\n")):
+        clave = clave.replace(escapado, real)
+    clave = clave.replace("\r\n", "\n").replace("\r", "\n").replace("\\", "")
+
+    if "-----BEGIN" not in clave:
+        crudo = "".join(clave.split()).replace("-", "+").replace("_", "/")
+        crudo += "=" * (-len(crudo) % 4)
+        try:
+            clave = base64.b64decode(crudo).decode("utf-8")
+        except (ValueError, UnicodeDecodeError) as exc:
+            raise ValueError("La private_key no tiene cabeceras PEM válidas") from exc
+
+    lineas = [linea.strip() for linea in clave.splitlines() if linea.strip()]
+    if (
+        len(lineas) < 3
+        or not lineas[0].startswith("-----BEGIN")
+        or not lineas[-1].startswith("-----END")
+    ):
+        raise ValueError("La private_key no tiene cabeceras PEM válidas")
+
+    cuerpo = "".join(lineas[1:-1]).replace(" ", "").replace("=", "")
+    cuerpo = cuerpo.replace("-", "+").replace("_", "/")
+    cuerpo += "=" * (-len(cuerpo) % 4)
+    filas = [cuerpo[i : i + 64] for i in range(0, len(cuerpo), 64)]
+    return "\n".join([lineas[0], *filas, lineas[-1]]) + "\n"
+
+
+def _cargar_cuenta() -> dict[str, Any] | None:
+    """Lee ``FIREBASE_CREDENTIALS_JSON`` y normaliza la cuenta de servicio.
+
+    Acepta el JSON en una línea, con ``\\n`` escapados (simples o dobles), con
+    CRLF, envuelto en comillas exteriores o codificado entero en Base64. Devuelve
+    ``None`` si la variable no está definida.
+    """
+    contenido = (os.getenv("FIREBASE_CREDENTIALS_JSON") or "").strip().lstrip("\ufeff")
+    if not contenido:
+        return None
+    if len(contenido) >= 2 and contenido[0] == contenido[-1] and contenido[0] in "\"'":
+        contenido = contenido[1:-1].strip()
+
+    try:
+        datos = json.loads(contenido)
+    except json.JSONDecodeError:
+        try:
+            datos = json.loads(contenido.replace('\\"', '"'))
+        except json.JSONDecodeError:
+            crudo = "".join(contenido.split())
+            crudo += "=" * (-len(crudo) % 4)
+            try:
+                datos = json.loads(base64.b64decode(crudo))
+            except (ValueError, UnicodeDecodeError) as exc:
+                raise ValueError(
+                    "FIREBASE_CREDENTIALS_JSON no es un JSON válido ni Base64 de un JSON"
+                ) from exc
+
+    if not isinstance(datos, dict):
+        raise ValueError("FIREBASE_CREDENTIALS_JSON debe ser un objeto JSON")
+    clave = datos.get("private_key")
+    if not isinstance(clave, str):
+        raise ValueError("FIREBASE_CREDENTIALS_JSON no incluye private_key")
+
+    datos["private_key"] = _normalizar_pem(clave)
+    return datos
+
+
 def _credencial():
     from firebase_admin import credentials
 
-    contenido = os.getenv("FIREBASE_CREDENTIALS_JSON", "").strip()
-    if contenido:
-        # Limpiar comillas exteriores que Dokploy o el entorno puedan agregar
-        if (contenido.startswith("'") and contenido.endswith("'")) or (
-            contenido.startswith('"') and contenido.endswith('"')
-        ):
-            contenido = contenido[1:-1].strip()
-
-        try:
-            datos = json.loads(contenido)
-        except Exception:
-            datos = json.loads(contenido.replace('\\"', '"'))
-
-        # Auto-reparar los saltos de línea de la private_key (de \\n a \n real)
-        if isinstance(datos, dict) and "private_key" in datos and isinstance(datos["private_key"], str):
-            datos["private_key"] = datos["private_key"].replace("\\n", "\n")
-
+    datos = _cargar_cuenta()
+    if datos is None:
+        return credentials.ApplicationDefault()  # usa GOOGLE_APPLICATION_CREDENTIALS
+    try:
         return credentials.Certificate(datos)
-    return credentials.ApplicationDefault()  # usa GOOGLE_APPLICATION_CREDENTIALS
+    except Exception as exc:
+        # El mensaje evita exponer la clave o el JSON en los logs.
+        raise ValueError(
+            "No se pudo cargar la private_key de FIREBASE_CREDENTIALS_JSON; "
+            "vuelve a copiar el JSON completo de la cuenta de servicio."
+        ) from exc
 
 
 def _cliente():

@@ -9,6 +9,9 @@ COPY . .
 # NEXT_PUBLIC_* se fija en el build: llega como build arg desde el compose.
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# Si el build arg falta, `next build` hornearía http://127.0.0.1:8000 en el
+# bundle y el navegador llamaría a su propio localhost. Fallar aquí es más claro.
+RUN test -n "$NEXT_PUBLIC_API_URL" || (echo "Falta el build arg NEXT_PUBLIC_API_URL (p. ej. https://api-shareu.iscoutb.dev)" >&2; exit 1)
 RUN npm run build && npm prune --omit=dev
  
 FROM node:22-alpine
